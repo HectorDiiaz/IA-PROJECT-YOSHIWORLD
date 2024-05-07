@@ -6,3 +6,9 @@ class Nodo:
         self.profundidad= profundidad
         self.utilidad = utilidad
         self.minmax = minmax
+
+    def agregar_hijo(self, hijo):
+        self.hijos.append(hijo)
+
+    def obtener_hijos(self):
+        return self.hijos

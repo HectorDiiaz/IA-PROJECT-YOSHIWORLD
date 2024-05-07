@@ -4,6 +4,7 @@ import random
 from level import select_level
 from settings import clock, screen_size, board_size, square_size, knight_moves, board, screen, yoshi_green_img,yoshi_red_img
 from colors import BLACK, WHITE, GREEN, GREY, RED
+from nodo import Nodo
 
 pygame.init()
 
@@ -64,8 +65,24 @@ def count_valid_moves(position):
     yoshi_riv = count_valid_moves(yoshi_riv)
 
     return yoshi_act - yoshi_riv"""
-#def minimax(posicion, profundidad, maximo, yoshi_act, yoshi_riv):
+
+def tree(position, level):
+    valid_moves=count_valid_moves(position)
+    nodo_inicial= Nodo(position,utilidad=None, minmax="Max")
+
     
+
+
+
+    hijos=nodo_inicial.obtener_hijos
+
+def expandir_nodo(nodo_padre:Nodo, hijos):
+        for nodo in hijos:
+            if(nodo_padre.minmax=="Max"):
+                nodo_padre.agregar_hijo(Nodo(nodo,utilidad=None,nodo_padre=nodo_padre,minimax="Min"))
+            else:
+                nodo_padre.agregar_hijo(Nodo(nodo,utilidad=None,nodo_padre=nodo_padre,minimax="Max"))
+
 
 def main():
     level = select_level()
@@ -83,7 +100,7 @@ def main():
     running = True
     while running:
         if turn == 2:
-            count_valid_moves(yoshi_red)
+            tree(yoshi_red)
             turn = 1
         if not check_valid_moves(yoshi_green, yoshi_red):
             running = False
