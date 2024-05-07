@@ -18,14 +18,6 @@ def is_valid_move(row, col, player, yoshi_green, yoshi_red):
     possible_moves = [(current_pos[0] + dx, current_pos[1] + dy) for dx, dy in knight_moves]
     return (row, col) in possible_moves and 0 <= row < board_size and 0 <= col < board_size and board[row][col] == 0
 
-
-    # Calculate all possible "L" moves from the current position
-    possible_moves = [(current_pos[0] + dx, current_pos[1] + dy) for dx, dy in knight_moves]
-    
-    # Check if the selected move is within the bounds of the board and to an unpainted cell
-    return (row, col) in possible_moves and 0 <= row < board_size and 0 <= col < board_size and board[row][col] == 0
-
-
 def handle_click(x, y, player, yoshi_green, yoshi_red):
     row = y // square_size
     col = x // square_size
@@ -58,29 +50,31 @@ def check_valid_moves(yoshi_green, yoshi_red):
     return green_valid_moves or red_valid_moves
 
 def count_valid_moves(position):
-    count = 0
+    positionMov = []
     for dx, dy in knight_moves:
         new_row = position[0] + dx
         new_col = position[1] + dy
         if 0 <= new_row < board_size and 0 <= new_col < board_size and board[new_row][new_col] == 0:
-            count += 1
-    return count
+            positionMov.append((new_row, new_col))
+    print(positionMov)          
+    return positionMov
 
-def heuristica(yoshi_act, yoshi_riv):
+"""def heuristica(yoshi_act, yoshi_riv):
     yoshi_act = count_valid_moves(yoshi_act)
     yoshi_riv = count_valid_moves(yoshi_riv)
 
-    return yoshi_act - yoshi_riv
+    return yoshi_act - yoshi_riv"""
+#def minimax(posicion, profundidad, maximo, yoshi_act, yoshi_riv):
+    
+
 def main():
     level = select_level()
     print(f"Selected Level: {level}")
-
     # Initial positions for both Yoshis
     yoshi_green = (random.randint(0, 7), random.randint(0, 7))
     yoshi_red = (random.randint(0, 7), random.randint(0, 7))
     while yoshi_red == yoshi_green:
         yoshi_red = (random.randint(0, 7), random.randint(0, 7))
-
     board[yoshi_green[0]][yoshi_green[1]] = 1
     board[yoshi_red[0]][yoshi_red[1]] = 2
 
@@ -88,10 +82,12 @@ def main():
 
     running = True
     while running:
+        if turn == 2:
+            count_valid_moves(yoshi_red)
+            turn = 1
         if not check_valid_moves(yoshi_green, yoshi_red):
             running = False
             continue
-        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -104,17 +100,15 @@ def main():
                         yoshi_green = new_pos
                     else:
                         yoshi_red = new_pos
-
                     if turn == 1:
                         player_pos = yoshi_green
                     else:
                         player_pos = yoshi_red
-
+                    
                     player_valid_moves = any(is_valid_move(player_pos[0] + dx, player_pos[1] + dy, turn, yoshi_green, yoshi_red) for dx, dy in knight_moves)
                     if not player_valid_moves:
                         # If the current player has no valid moves, switch the turn to the other player
                         turn = 3 - turn
-
         draw_board(turn, yoshi_green, yoshi_red)
         pygame.display.flip()
         clock.tick(60)
