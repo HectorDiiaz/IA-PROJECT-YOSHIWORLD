@@ -57,7 +57,7 @@ def count_valid_moves(position):
         new_col = position[1] + dy
         if 0 <= new_row < board_size and 0 <= new_col < board_size and board[new_row][new_col] == 0:
             positionMov.append((new_row, new_col))
-    print(positionMov)          
+    #print(positionMov)          
     return positionMov
 
 """def heuristica(yoshi_act, yoshi_riv):
@@ -65,23 +65,63 @@ def count_valid_moves(position):
     yoshi_riv = count_valid_moves(yoshi_riv)
 
     return yoshi_act - yoshi_riv"""
-
+minmaxListExpandir = []
+minmaxList2 = []
 def tree(position, level):
-    valid_moves=count_valid_moves(position)
-    nodo_inicial= Nodo(position,utilidad=None, minmax="Max")
-
+    # valid_moves=count_valid_moves(position)
+    # nodo_inicial= Nodo(position,utilidad=None, minmax="Max")
+    print("POSICION INICIAL", position)
+    print("Matriz inicial", board)
+    nodo_inicial = Nodo(position, utilidad=None, minmax="MAX", tablero=board, nodo_padre=None)
+    print("Matriz inicial", nodo_inicial.tablero)
+    minmaxListExpandir.append(nodo_inicial)
+    #Se debe coger el nodo actual y no el nodo inicial
+     #Expande los nodos para esa posicion inicial
+    expandirArbol(nodo_inicial)
+        #lo agrega a la lista 2
+    minmaxList2.append(nodo_inicial)
+    #Lo elimino de la lista 1
     
+    #NIVEL PRINCIPIANTE
+    while (minmaxListExpandir[0].profundidad <= 3):
+        for nodoExpandir in minmaxListExpandir:
+            print(nodoExpandir.profundidad)
+            
+             
+            minmaxListExpandir.pop(0)
+        #Expande
+            expandirArbol(nodoExpandir)
+            #
+        #añade a la lista
+            minmaxList2.append(nodoExpandir) 
+
+def expandirArbol(nodoAExpandir):
+    # 1. Obtener posiciones validad para ese nodo
+    valid_moves = count_valid_moves(nodoAExpandir.estado)
+    # 2. Crear los nodos para esas posiciones validas y añadirlos a las listas
+    for move in valid_moves:
+        if(nodoAExpandir.minmax=="MAX"):
+           
+            nodo = Nodo(move, utilidad=None, minmax="MIN", tablero=nodoAExpandir.tablero, nodo_padre=nodoAExpandir)
+            if nodo.nodo_padre is not None:
+
+                nodo.profundidad = nodo.nodo_padre.profundidad + 1
+            nodo.agregarPosicionTablero()
+            minmaxListExpandir.append(nodo)
+            nodoAExpandir.agregar_hijo(nodo)
+            print("POSICION", nodo.tablero) 
+        else:
+            nodo = Nodo(move, utilidad=None, minmax="MAX", tablero=nodoAExpandir.tablero, nodo_padre=nodoAExpandir)
+            if nodo.nodo_padre is not None:
+
+                nodo.profundidad = nodo.nodo_padre.profundidad + 1
+            nodo.agregarPosicionTablero()
+            minmaxListExpandir.append(nodo)
+            nodoAExpandir.agregar_hijo(nodo)
+            print("POSICION", nodo.tablero) 
 
 
 
-    hijos=nodo_inicial.obtener_hijos
-
-def expandir_nodo(nodo_padre:Nodo, hijos):
-        for nodo in hijos:
-            if(nodo_padre.minmax=="Max"):
-                nodo_padre.agregar_hijo(Nodo(nodo,utilidad=None,nodo_padre=nodo_padre,minimax="Min"))
-            else:
-                nodo_padre.agregar_hijo(Nodo(nodo,utilidad=None,nodo_padre=nodo_padre,minimax="Max"))
 
 
 def main():
@@ -100,7 +140,7 @@ def main():
     running = True
     while running:
         if turn == 2:
-            tree(yoshi_red)
+            tree(yoshi_red, level)
             turn = 1
         if not check_valid_moves(yoshi_green, yoshi_red):
             running = False
