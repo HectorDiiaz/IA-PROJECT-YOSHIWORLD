@@ -65,8 +65,9 @@ def count_valid_moves(position):
     yoshi_riv = count_valid_moves(yoshi_riv)
 
     return yoshi_act - yoshi_riv"""
-minmaxListExpandir = []
+minmaxListPorExpandir = []
 minmaxList2 = []
+minmaxlist = []
 def tree(position, level):
     # valid_moves=count_valid_moves(position)
     # nodo_inicial= Nodo(position,utilidad=None, minmax="Max")
@@ -74,26 +75,59 @@ def tree(position, level):
     print("Matriz inicial", board)
     nodo_inicial = Nodo(position, utilidad=None, minmax="MAX", tablero=board, nodo_padre=None)
     print("Matriz inicial", nodo_inicial.tablero)
-    minmaxListExpandir.append(nodo_inicial)
+    minmaxListPorExpandir.append(nodo_inicial)
     #Se debe coger el nodo actual y no el nodo inicial
      #Expande los nodos para esa posicion inicial
-    expandirArbol(nodo_inicial)
+    #expandirArbol(nodo_inicial)
         #lo agrega a la lista 2
-    minmaxList2.append(nodo_inicial)
+    #minmaxList2.append(nodo_inicial)
     #Lo elimino de la lista 1
     
     #NIVEL PRINCIPIANTE
-    while (minmaxListExpandir[0].profundidad <= 3):
-        for nodoExpandir in minmaxListExpandir:
-            print(nodoExpandir.profundidad)
+    # while (minmaxListExpandir[0].profundidad <= 3):
+    #     for nodoExpandir in minmaxListExpandir:
+    #         print(nodoExpandir.profundidad)
             
              
-            minmaxListExpandir.pop(0)
+    #         minmaxListExpandir.pop(0)
+    #     #Expande
+    #         expandirArbol(nodoExpandir)
+    #         #
+    #     #añade a la lista
+    #         minmaxList2.append(nodoExpandir) 
+
+    #De un nodo obtengo las posiciones posibles y los estados del juego
+    #De esos nodos debo sacar lo mismo pero para el jugador verde
+    # while (minmaxListExpandir[0].profundidad <= 3):
+    #     for nodoExpandir in minmaxListExpandir:
+    #         print(nodoExpandir.profundidad)
+            
+             
+    #         minmaxListExpandir.pop(0)
+    #     #Expande
+    #         expandirArbol(nodoExpandir)
+    #         #
+    #     #añade a la lista
+    #         minmaxList2.append(nodoExpandir) 
+    #De la lista de hijos saco los demas nodos de cada uno
+    #Expande el nodo actual, el nodo actuall ponlo en una lista aparte
+    #quedan en la otra lista los hijos del nodo actual
+    #A esos hijos debo expandirlos igual
+
+    #Solo tengo en la lista el nodo inicial
+    for i in range(1):
+        for nodoExpandir in minmaxListPorExpandir:
+            print(nodoExpandir.profundidad)
+            minmaxList2.append(nodoExpandir) 
         #Expande
             expandirArbol(nodoExpandir)
-            #
+            
+            minmaxListPorExpandir.pop(0)
         #añade a la lista
-            minmaxList2.append(nodoExpandir) 
+            
+        
+        i -= 1
+        print(minmaxList2)
 
 def expandirArbol(nodoAExpandir):
     # 1. Obtener posiciones validad para ese nodo
@@ -107,7 +141,7 @@ def expandirArbol(nodoAExpandir):
 
                 nodo.profundidad = nodo.nodo_padre.profundidad + 1
             nodo.agregarPosicionTablero()
-            minmaxListExpandir.append(nodo)
+            minmaxList2.append(nodo)
             nodoAExpandir.agregar_hijo(nodo)
             print("POSICION", nodo.tablero) 
         else:
@@ -116,7 +150,7 @@ def expandirArbol(nodoAExpandir):
 
                 nodo.profundidad = nodo.nodo_padre.profundidad + 1
             nodo.agregarPosicionTablero()
-            minmaxListExpandir.append(nodo)
+            minmaxList2.append(nodo)
             nodoAExpandir.agregar_hijo(nodo)
             print("POSICION", nodo.tablero) 
 

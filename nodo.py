@@ -18,5 +18,7 @@ class Nodo:
     
     #Funcion que agrega el nuevo estado a su tablero
     def agregarPosicionTablero(self):
-        self.tablero[self.estado[0]][self.estado[1]] = 2
-           
+        if(self.minmax == "MAX"):
+            self.tablero[self.estado[0]][self.estado[1]] = 1
+        else:
+            self.tablero[self.estado[0]][self.estado[1]] = 2
