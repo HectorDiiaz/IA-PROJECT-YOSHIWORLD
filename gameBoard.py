@@ -50,12 +50,12 @@ def check_valid_moves(yoshi_green, yoshi_red):
     red_valid_moves = any(is_valid_move(yoshi_red[0] + dx, yoshi_red[1] + dy, 2, yoshi_green, yoshi_red) for dx, dy in knight_moves)
     return green_valid_moves or red_valid_moves
 
-def count_valid_moves(position):
+def count_valid_moves(position, board_act):
     positionMov = []
     for dx, dy in knight_moves:
         new_row = position[0] + dx
         new_col = position[1] + dy
-        if 0 <= new_row < board_size and 0 <= new_col < board_size and board[new_row][new_col] == 0:
+        if 0 <= new_row < board_size and 0 <= new_col < board_size and board_act[new_row][new_col] == 0:
             positionMov.append((new_row, new_col))
     #print(positionMov)          
     return positionMov
@@ -68,113 +68,77 @@ def count_valid_moves(position):
 minmaxListPorExpandir = []
 minmaxList2 = []
 minmaxlist = []
-def tree(position, level):
-    # valid_moves=count_valid_moves(position)
-    # nodo_inicial= Nodo(position,utilidad=None, minmax="Max")
-    print("POSICION INICIAL", position)
+def tree():
+    positionRojo = (1,7)
+    positionVerde = (1,3)
+    print("POSICION INICIAL", positionRojo)
+    print("POSICION INICIAL", positionVerde)
     print("Matriz inicial", board)
-    nodo_inicial = Nodo(position, utilidad=None, minmax="MAX", tablero=board, nodo_padre=None)
+    nodo_inicial = Nodo(positionRojo, utilidad=None, minmax="MAX", tablero=board, estadoContrincante=positionVerde, nodo_padre=None)
     print("Matriz inicial", nodo_inicial.tablero)
     minmaxListPorExpandir.append(nodo_inicial)
-    #Se debe coger el nodo actual y no el nodo inicial
-     #Expande los nodos para esa posicion inicial
-    #expandirArbol(nodo_inicial)
-        #lo agrega a la lista 2
-    #minmaxList2.append(nodo_inicial)
-    #Lo elimino de la lista 1
-    
-    #NIVEL PRINCIPIANTE
-    # while (minmaxListExpandir[0].profundidad <= 3):
-    #     for nodoExpandir in minmaxListExpandir:
-    #         print(nodoExpandir.profundidad)
-            
-             
-    #         minmaxListExpandir.pop(0)
-    #     #Expande
-    #         expandirArbol(nodoExpandir)
-    #         #
-    #     #añade a la lista
-    #         minmaxList2.append(nodoExpandir) 
+    expandirArbol(nodo_inicial, 2)
+    print(obtener_nodos_hoja(nodo_inicial))
 
-    #De un nodo obtengo las posiciones posibles y los estados del juego
-    #De esos nodos debo sacar lo mismo pero para el jugador verde
-    # while (minmaxListExpandir[0].profundidad <= 3):
-    #     for nodoExpandir in minmaxListExpandir:
-    #         print(nodoExpandir.profundidad)
-            
-             
-    #         minmaxListExpandir.pop(0)
-    #     #Expande
-    #         expandirArbol(nodoExpandir)
-    #         #
-    #     #añade a la lista
-    #         minmaxList2.append(nodoExpandir) 
-    #De la lista de hijos saco los demas nodos de cada uno
-    #Expande el nodo actual, el nodo actuall ponlo en una lista aparte
-    #quedan en la otra lista los hijos del nodo actual
-    #A esos hijos debo expandirlos igual
 
-    #Solo tengo en la lista el nodo inicial
-    for i in range(1):
-        for nodoExpandir in minmaxListPorExpandir:
-            print(nodoExpandir.profundidad)
-            minmaxList2.append(nodoExpandir) 
-        #Expande
-            expandirArbol(nodoExpandir)
-            
-            minmaxListPorExpandir.pop(0)
-        #añade a la lista
-            
-        
-        i -= 1
-        print(minmaxList2)
-
-def expandirArbol(nodoAExpandir):
+def expandirArbol(nodoAExpandir, depth=0):
+    if depth == 0:
+        return 
     # 1. Obtener posiciones validad para ese nodo
-    valid_moves = count_valid_moves(nodoAExpandir.estado)
+    if(nodoAExpandir.minmax=="MAX"):
+        valid_moves = count_valid_moves(nodoAExpandir.estado, nodoAExpandir.tablero)
+    else:
+        valid_moves = count_valid_moves(nodoAExpandir.estadoContrincante, nodoAExpandir.tablero)
     # 2. Crear los nodos para esas posiciones validas y añadirlos a las listas
     for move in valid_moves:
         if(nodoAExpandir.minmax=="MAX"):
-           
-            nodo = Nodo(move, utilidad=None, minmax="MIN", tablero=nodoAExpandir.tablero, nodo_padre=nodoAExpandir)
+         
+            nodo = Nodo(move, utilidad=None, minmax="MIN", tablero=nodoAExpandir.tablero, estadoContrincante=nodoAExpandir.estadoContrincante, nodo_padre=nodoAExpandir)
             if nodo.nodo_padre is not None:
-
                 nodo.profundidad = nodo.nodo_padre.profundidad + 1
             nodo.agregarPosicionTablero()
             minmaxList2.append(nodo)
             nodoAExpandir.agregar_hijo(nodo)
-            print("POSICION", nodo.tablero) 
+            print("POSICION", nodo.nodo_padre.estado, nodo.estado, nodo.minmax) 
+            expandirArbol(nodo, depth - 1)
         else:
-            nodo = Nodo(move, utilidad=None, minmax="MAX", tablero=nodoAExpandir.tablero, nodo_padre=nodoAExpandir)
-            if nodo.nodo_padre is not None:
 
+            nodo = Nodo(move, utilidad=None, minmax="MAX", tablero=nodoAExpandir.tablero,  estadoContrincante=nodoAExpandir.estadoContrincante, nodo_padre=nodoAExpandir)
+            if nodo.nodo_padre is not None:
                 nodo.profundidad = nodo.nodo_padre.profundidad + 1
             nodo.agregarPosicionTablero()
             minmaxList2.append(nodo)
             nodoAExpandir.agregar_hijo(nodo)
-            print("POSICION", nodo.tablero) 
+            print("POSICION", nodo.nodo_padre.estado, nodo.estado, nodo.minmax)
+            expandirArbol(nodo, depth - 1) 
 
-
+def obtener_nodos_hoja(nodo):
+    if not nodo.hijos:  # Si el nodo no tiene hijos, es una hoja
+        return [nodo.estado]
+    nodos_hoja = []
+    for hijo in nodo.hijos:
+        nodos_hoja.extend(obtener_nodos_hoja(hijo))
+    return nodos_hoja
 
 
 
 def main():
     level = select_level()
     print(f"Selected Level: {level}")
-    # Initial positions for both Yoshis
-    yoshi_green = (random.randint(0, 7), random.randint(0, 7))
-    yoshi_red = (random.randint(0, 7), random.randint(0, 7))
+
+    yoshi_green = (1,3)
+    yoshi_red = (1,7)
     while yoshi_red == yoshi_green:
         yoshi_red = (random.randint(0, 7), random.randint(0, 7))
     board[yoshi_green[0]][yoshi_green[1]] = 1
     board[yoshi_red[0]][yoshi_red[1]] = 2
 
     turn = 2  # Red starts
-
+    
     running = True
     while running:
         if turn == 2:
-            tree(yoshi_red, level)
+            tree()
             turn = 1
         if not check_valid_moves(yoshi_green, yoshi_red):
             running = False
