@@ -50,46 +50,64 @@ def check_valid_moves(yoshi_green, yoshi_red):
     red_valid_moves = any(is_valid_move(yoshi_red[0] + dx, yoshi_red[1] + dy, 2, yoshi_green, yoshi_red) for dx, dy in knight_moves)
     return green_valid_moves or red_valid_moves
 
-def count_valid_moves(position):
+def valid_moves(position, current_board, current_player, other_yoshi_pos):
     positionMov = []
+    yoshi_pos = position if current_player == 2 else other_yoshi_pos
+    
     for dx, dy in knight_moves:
-        new_row = position[0] + dx
-        new_col = position[1] + dy
-        if 0 <= new_row < board_size and 0 <= new_col < board_size and board[new_row][new_col] == 0:
+        new_row = yoshi_pos[0] + dx
+        new_col = yoshi_pos[1] + dy
+        if 0 <= new_row < board_size and 0 <= new_col < board_size and current_board[new_row][new_col] == 0:
             positionMov.append((new_row, new_col))
-    print(positionMov)          
+            
     return positionMov
 
-"""def heuristica(yoshi_act, yoshi_riv):
-    yoshi_act = count_valid_moves(yoshi_act)
-    yoshi_riv = count_valid_moves(yoshi_riv)
+def expand_node(node, depth, current_board, current_player, other_yoshi_pos):
+    if depth == 0:
+        return
+    
+    movimientos = valid_moves(node.estado, current_board, current_player, other_yoshi_pos)
+    next_player = 1 if current_player == 2 else 2  # Alternar entre los jugadores
+    for move in movimientos:
+        child_node = Nodo(estado=move, utilidad=None, minmax="Min" if next_player == 1 else "Max", nodo_padre=node, profundidad=node.profundidad + 1)
+        node.agregar_hijo(child_node)
+        # Crear una copia del tablero antes de hacer el próximo movimiento
+        next_board = [row[:] for row in current_board]
+        next_board[move[0]][move[1]] = next_player
 
-    return yoshi_act - yoshi_riv"""
+        next_yoshi_pos = node.estado if next_player == current_player else other_yoshi_pos
 
-def tree(position, level):
-    valid_moves=count_valid_moves(position)
-    nodo_inicial= Nodo(position,utilidad=None, minmax="Max")
-
+        expand_node(child_node, depth - 1, next_board, next_player, next_yoshi_pos)
     
 
+def tree(position, depth,other_yoshi_pos ):
+    root = Nodo(estado=position, utilidad=None, minmax="Max", profundidad=0)
+    initial_board = [row[:] for row in board]
+    expand_node(root, depth, initial_board, current_player=2, other_yoshi_pos=other_yoshi_pos)
+    return root
 
+# def heuristica(yoshi_act, yoshi_riv):
+#     yoshi_act = count_valid_moves(yoshi_act)
+#     yoshi_riv = count_valid_moves(yoshi_riv)
 
-    hijos=nodo_inicial.obtener_hijos
+#     return yoshi_act - yoshi_riv
 
-def expandir_nodo(nodo_padre:Nodo, hijos):
-        for nodo in hijos:
-            if(nodo_padre.minmax=="Max"):
-                nodo_padre.agregar_hijo(Nodo(nodo,utilidad=None,nodo_padre=nodo_padre,minimax="Min"))
-            else:
-                nodo_padre.agregar_hijo(Nodo(nodo,utilidad=None,nodo_padre=nodo_padre,minimax="Max"))
-
+def obtener_nodos_hoja(nodo):
+    if not nodo.hijos:  # Si el nodo no tiene hijos, es una hoja
+        return [nodo.estado]
+    nodos_hoja = []
+    for hijo in nodo.hijos:
+        nodos_hoja.extend(obtener_nodos_hoja(hijo))
+    return nodos_hoja
 
 def main():
     level = select_level()
     print(f"Selected Level: {level}")
     # Initial positions for both Yoshis
-    yoshi_green = (random.randint(0, 7), random.randint(0, 7))
-    yoshi_red = (random.randint(0, 7), random.randint(0, 7))
+    yoshi_green = (1, 3)
+    # yoshi_green = (random.randint(0, 7), random.randint(0, 7))
+    # yoshi_red = (random.randint(0, 7), random.randint(0, 7))
+    yoshi_red = (1,7)
     while yoshi_red == yoshi_green:
         yoshi_red = (random.randint(0, 7), random.randint(0, 7))
     board[yoshi_green[0]][yoshi_green[1]] = 1
@@ -100,7 +118,9 @@ def main():
     running = True
     while running:
         if turn == 2:
-            tree(yoshi_red)
+            raiz = tree(yoshi_red, depth=2, other_yoshi_pos=yoshi_green)
+            nodos_hoja = obtener_nodos_hoja(raiz)
+            print("Nodos hoja:", nodos_hoja)  # Imprimir los nodos hoja para propósitos de prueba
             turn = 1
         if not check_valid_moves(yoshi_green, yoshi_red):
             running = False
