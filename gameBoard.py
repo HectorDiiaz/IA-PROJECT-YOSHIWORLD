@@ -26,6 +26,7 @@ def handle_click(x, y, player, yoshi_green, yoshi_red):
         board[row][col] = player
         return (row, col), 3 - player  # Alternates between 1 and 2
     return None, player
+
 def draw_board(turn, yoshi_green, yoshi_red):
     screen.fill(BLACK)  # Limpia la pantalla
     # Dibuja las casillas del tablero
@@ -80,34 +81,74 @@ def expand_node(node, depth, current_board, current_player, rival):
 
         expand_node(child_node, depth - 1, next_board, next_player, node.estado)
     
-
 def tree(position, depth,other_yoshi_pos ):
     root = Nodo(estado=position, utilidad=None, minmax="Max", profundidad=0)
     initial_board = [row[:] for row in board]
     expand_node(root, depth, initial_board, current_player=2, rival=other_yoshi_pos)
     return root
 
-# def heuristica(yoshi_act, yoshi_riv):
-#     yoshi_act = count_valid_moves(yoshi_act)
-#     yoshi_riv = count_valid_moves(yoshi_riv)
+def asignar_utilidad_nodos_hoja(nodo):
+    if not nodo.hijos:  # Si el nodo no tiene hijos, es una hoja
+        print("Estado del nodo:", nodo.estado)
+        print("Estado del nodo padre:", nodo.nodo_padre.estado)
+        nodo.utilidad = heuristica(nodo.estado, nodo.nodo_padre.estado) if nodo.minmax == "Max" else heuristica(nodo.nodo_padre.estado, nodo.estado)
+        print("Utilidad asignada al nodo:", nodo.utilidad)
+        return
+    for hijo in nodo.hijos:
+        asignar_utilidad_nodos_hoja(hijo)
 
-#     return yoshi_act - yoshi_riv
+def count_valid_moves(position):
+    row, col = position
+    valid_moves_count = 0
+    for dx, dy in knight_moves:
+        new_row = row + dx
+        new_col = col + dy
+        if 0 <= new_row < board_size and 0 <= new_col < board_size and board[new_row][new_col] == 0:
+            valid_moves_count += 1
+    return valid_moves_count
+
+def heuristica(yoshi_act, yoshi_riv):
+    yoshi_act = count_valid_moves(yoshi_act)
+    yoshi_riv = count_valid_moves(yoshi_riv)
+
+    return yoshi_act - yoshi_riv
 
 def obtener_nodos_hoja(nodo):
     if not nodo.hijos:  # Si el nodo no tiene hijos, es una hoja
-        return [nodo.estado]
+        return [(nodo.estado, nodo.utilidad)]
     nodos_hoja = []
     for hijo in nodo.hijos:
         nodos_hoja.extend(obtener_nodos_hoja(hijo))
     return nodos_hoja
 
+def asignar_utilidad_desde_hoja_a_raiz(nodo):
+    if not nodo.hijos:  # Si el nodo no tiene hijos, es una hoja
+        return nodo.utilidad
+    if nodo.minmax == "Max":
+        nodo.utilidad = max(asignar_utilidad_desde_hoja_a_raiz(hijo) for hijo in nodo.hijos)
+    else:
+        nodo.utilidad = min(asignar_utilidad_desde_hoja_a_raiz(hijo) for hijo in nodo.hijos)
+    return nodo.utilidad
+
+
+def imprimir_nodos_desde_raiz(nodo):
+    print(f"Profundidad: {nodo.profundidad} | Tipo de nodo (min/max): {nodo.minmax} | Estado: {nodo.estado} | Utilidad: {nodo.utilidad} | Nodo padre: {nodo.nodo_padre.estado if nodo.nodo_padre else 'None'}")
+    print("--------------------------------------")
+    [imprimir_nodos_desde_raiz(hijo) for hijo in nodo.hijos]
+
+
+def obtener_estado_con_utilidad_raiz(nodo_raiz):
+    utilidad_raiz = nodo_raiz.utilidad
+    for hijo in nodo_raiz.hijos:
+        if hijo.utilidad == utilidad_raiz:
+            return hijo.estado
+    return None
+
 def main():
-    level = select_level()
+    level, difficulty = select_level()
     print(f"Selected Level: {level}")
     # Initial positions for both Yoshis
     yoshi_green = (0,0)
-    # yoshi_green = (random.randint(0, 7), random.randint(0, 7))
-    # yoshi_red = (random.randint(0, 7), random.randint(0, 7))
     yoshi_red = (0,7)
     while yoshi_red == yoshi_green:
         yoshi_red = (random.randint(0, 7), random.randint(0, 7))
@@ -118,35 +159,46 @@ def main():
 
     running = True
     while running:
-        if turn == 2:
-            raiz = tree(yoshi_red, depth=3, other_yoshi_pos=yoshi_green)
-            nodos_hoja = obtener_nodos_hoja(raiz)
-            print("Nodos hoja:", nodos_hoja)  # Imprimir los nodos hoja para propósitos de prueba
-            turn = 1
         if not check_valid_moves(yoshi_green, yoshi_red):
-            running = False
-            continue
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
                 running = False
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                x, y = pygame.mouse.get_pos()
-                new_pos, new_turn = handle_click(x, y, turn, yoshi_green, yoshi_red)
-                if new_pos:
-                    turn = new_turn  # Update the turn
-                    if turn == 2:
-                        yoshi_green = new_pos
-                    else:
-                        yoshi_red = new_pos
-                    if turn == 1:
-                        player_pos = yoshi_green
-                    else:
-                        player_pos = yoshi_red
+                continue
+        if turn == 2:
+            raiz = tree(yoshi_red, depth=difficulty, other_yoshi_pos=yoshi_green)
+            asignar_utilidad_nodos_hoja(raiz)
+            asignar_utilidad_desde_hoja_a_raiz(raiz)
+            imprimir_nodos_desde_raiz(raiz)
+            ruta = obtener_estado_con_utilidad_raiz(raiz)
+            print("Ruta de la solución: "+ str(ruta))
+            if ruta:
+                yoshi_red = ruta
+                row, col = ruta  # Obtener las coordenadas de la ruta
+                board[row][col] = 2  # Asignar el valor 2 (Yoshi rojo) a la posición de la ruta
+            turn = 1  # Cambia al turno del jugador humano
+            # new_pos = yoshi_red
+        else:
+            # Turno del jugador humano
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    x, y = pygame.mouse.get_pos()
+                    new_pos, new_turn = handle_click(x, y, turn, yoshi_green, yoshi_red)
+                    if new_pos:
+                        turn = new_turn  # Update the turn
+                        if turn == 2:
+                            yoshi_green = new_pos
+                        else:
+                            yoshi_red = new_pos
+                        if turn == 1:
+                            player_pos = yoshi_green
+                        else:
+                            player_pos = yoshi_red
                     
-                    player_valid_moves = any(is_valid_move(player_pos[0] + dx, player_pos[1] + dy, turn, yoshi_green, yoshi_red) for dx, dy in knight_moves)
-                    if not player_valid_moves:
-                        # If the current player has no valid moves, switch the turn to the other player
-                        turn = 3 - turn
+                        player_valid_moves = any(is_valid_move(player_pos[0] + dx, player_pos[1] + dy, turn, yoshi_green, yoshi_red) for dx, dy in knight_moves)
+                        if not player_valid_moves:
+                            # If the current player has no valid moves, switch the turn to the other player
+                            turn = 3 - turn
+
         draw_board(turn, yoshi_green, yoshi_red)
         pygame.display.flip()
         clock.tick(60)
