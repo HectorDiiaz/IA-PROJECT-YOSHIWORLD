@@ -7,7 +7,7 @@ from colors import BLACK, WHITE, GREEN, GREY, RED
 from nodo import Nodo
 
 pygame.init()
-
+header_height = square_size 
 font = pygame.font.Font(None, 36)
 
 def is_valid_move(row, col, player, yoshi_green, yoshi_red):
@@ -20,32 +20,37 @@ def is_valid_move(row, col, player, yoshi_green, yoshi_red):
     return (row, col) in possible_moves and 0 <= row < board_size and 0 <= col < board_size and board[row][col] == 0
 
 def handle_click(x, y, player, yoshi_green, yoshi_red):
-    row = y // square_size
+    row = (y - header_height) // square_size
     col = x // square_size
-    if is_valid_move(row, col, player, yoshi_green, yoshi_red):
+    if 0 <= row < board_size and 0 <= col < board_size and is_valid_move(row, col, player, yoshi_green, yoshi_red):
         board[row][col] = player
-        return (row, col), 3 - player  # Alternates between 1 and 2
+        return (row, col), 3 - player 
     return None, player
 
 def draw_board(turn, yoshi_green, yoshi_red):
     screen.fill(BLACK)  # Limpia la pantalla
+    # Dibuja el cuadro negro para el texto del turno
+    pygame.draw.rect(screen, BLACK, (0, 0, screen_size[0], square_size))
+    
+    # Renderiza y dibuja el texto del turno
+    turn_text = "Turno de Yoshi Verde" if turn == 1 else "Turno de Yoshi Rojo"
+    text_surface = font.render(turn_text, True, GREEN if turn == 1 else RED)
+    text_rect = text_surface.get_rect(center=(screen_size[0] // 2, square_size // 2))
+    screen.blit(text_surface, text_rect)
+
     # Dibuja las casillas del tablero
     for row in range(board_size):
         for col in range(board_size):
             color = WHITE if board[row][col] == 0 else GREEN if board[row][col] == 1 else RED
-            pygame.draw.rect(screen, color, (col * square_size, row * square_size, square_size, square_size))
+            pygame.draw.rect(screen, color, (col * square_size, (row + 1) * square_size, square_size, square_size))
     # Dibuja la cuadrícula
     for i in range(board_size + 1):
-        pygame.draw.line(screen, GREY, (0, i * square_size), (screen_size[0], i * square_size))
-        pygame.draw.line(screen, GREY, (i * square_size, 0), (i * square_size, screen_size[0]))
+        pygame.draw.line(screen, GREY, (0, i * square_size + square_size), (screen_size[0], i * square_size + square_size))
+        pygame.draw.line(screen, GREY, (i * square_size, square_size), (i * square_size, screen_size[1]))
     # Dibuja las imágenes de Yoshi
-    screen.blit(yoshi_green_img, (yoshi_green[1] * square_size, yoshi_green[0] * square_size))
-    screen.blit(yoshi_red_img, (yoshi_red[1] * square_size, yoshi_red[0] * square_size))
-    # Renderiza y dibuja el texto del turno
-    turn_text = "Turno de Yoshi Verde" if turn == 1 else "Turno de Yoshi Rojo"
-    text_surface = font.render(turn_text, True, GREEN if turn == 1 else RED)
-    screen.blit(text_surface, (10, 10))  # Ajusta la posición según necesites
-#Prueba terminal
+    screen.blit(yoshi_green_img, (yoshi_green[1] * square_size, yoshi_green[0] * square_size + square_size))
+    screen.blit(yoshi_red_img, (yoshi_red[1] * square_size, yoshi_red[0] * square_size + square_size))
+
 def check_valid_moves(yoshi_green, yoshi_red):
     green_valid_moves = any(is_valid_move(yoshi_green[0] + dx, yoshi_green[1] + dy, 1, yoshi_green, yoshi_red) for dx, dy in knight_moves)
     red_valid_moves = any(is_valid_move(yoshi_red[0] + dx, yoshi_red[1] + dy, 2, yoshi_green, yoshi_red) for dx, dy in knight_moves)
@@ -159,45 +164,50 @@ def main():
 
     running = True
     while running:
-        if not check_valid_moves(yoshi_green, yoshi_red):
-                running = False
-                continue
+        # if not check_valid_moves(yoshi_green, yoshi_red):
+        #         running = False
+        #         continue
         if turn == 2:
-            raiz = tree(yoshi_red, depth=difficulty, other_yoshi_pos=yoshi_green)
-            asignar_utilidad_nodos_hoja(raiz)
-            asignar_utilidad_desde_hoja_a_raiz(raiz)
-            imprimir_nodos_desde_raiz(raiz)
-            ruta = obtener_estado_con_utilidad_raiz(raiz)
-            print("Ruta de la solución: "+ str(ruta))
-            if ruta:
-                yoshi_red = ruta
-                row, col = ruta  # Obtener las coordenadas de la ruta
-                board[row][col] = 2  # Asignar el valor 2 (Yoshi rojo) a la posición de la ruta
-            turn = 1  # Cambia al turno del jugador humano
-            # new_pos = yoshi_red
+            player_valid_moves = any(is_valid_move(yoshi_red[0] + dx, yoshi_red[1] + dy, turn, yoshi_green, yoshi_red) for dx, dy in knight_moves)
+            if not player_valid_moves:
+                turn = 3 - turn
+            else:
+                raiz = tree(yoshi_red, depth=difficulty, other_yoshi_pos=yoshi_green)
+                asignar_utilidad_nodos_hoja(raiz)
+                asignar_utilidad_desde_hoja_a_raiz(raiz)
+                imprimir_nodos_desde_raiz(raiz)
+                ruta = obtener_estado_con_utilidad_raiz(raiz)
+                print("Ruta de la solución: "+ str(ruta))
+                if ruta:
+                    yoshi_red = ruta
+                    row, col = ruta  # Obtener las coordenadas de la ruta
+                    board[row][col] = 2  # Asignar el valor 2 (Yoshi rojo) a la posición de la ruta
+                turn = 1  # Cambia al turno del jugador humano
+                # new_pos = yoshi_red
         else:
             # Turno del jugador humano
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    x, y = pygame.mouse.get_pos()
-                    new_pos, new_turn = handle_click(x, y, turn, yoshi_green, yoshi_red)
-                    if new_pos:
-                        turn = new_turn  # Update the turn
-                        if turn == 2:
-                            yoshi_green = new_pos
-                        else:
-                            yoshi_red = new_pos
-                        if turn == 1:
-                            player_pos = yoshi_green
-                        else:
-                            player_pos = yoshi_red
-                    
-                        player_valid_moves = any(is_valid_move(player_pos[0] + dx, player_pos[1] + dy, turn, yoshi_green, yoshi_red) for dx, dy in knight_moves)
-                        if not player_valid_moves:
-                            # If the current player has no valid moves, switch the turn to the other player
-                            turn = 3 - turn
+            player_valid_moves = any(is_valid_move(yoshi_green[0] + dx, yoshi_green[1] + dy, turn, yoshi_green, yoshi_red) for dx, dy in knight_moves)
+            if not player_valid_moves:
+                turn = 3 - turn
+            else:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
+                    elif event.type == pygame.MOUSEBUTTONDOWN:
+                        x, y = pygame.mouse.get_pos()
+                        new_pos, new_turn = handle_click(x, y, turn, yoshi_green, yoshi_red)
+                        if new_pos:
+                            turn = new_turn  # Update the turn
+                            if turn == 2:
+                                yoshi_green = new_pos
+                            else:
+                                yoshi_red = new_pos
+                            if turn == 1:
+                                player_pos = yoshi_green
+                            else:
+                                player_pos = yoshi_red
+                
+
 
         draw_board(turn, yoshi_green, yoshi_red)
         pygame.display.flip()

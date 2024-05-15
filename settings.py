@@ -1,11 +1,15 @@
 import pygame
 
 clock = pygame.time.Clock()
-screen_size = (500, 500)
+
+# Ajusta la altura de la pantalla para incluir el recuadro negro
+board_size = 8
+square_size = 500 // board_size
+header_height = square_size  # Altura del recuadro negro
+screen_size = (500, 500 + header_height)
+
 screen = pygame.display.set_mode(screen_size)
 pygame.display.set_caption("Yoshi's World")
-board_size = 8
-square_size = screen_size[0] // board_size
 
 # Estado del tablero, 0 = sin pintar, 1 = verde, 2 = rojo
 board = [[0] * board_size for _ in range(board_size)]
