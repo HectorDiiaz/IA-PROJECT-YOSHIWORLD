@@ -60,6 +60,16 @@ def count_valid_moves(position, board_act):
     #print(positionMov)          
     return positionMov
 
+def count_valid_moves2(position, board_act):
+    positionMov = 0
+    for dx, dy in knight_moves:
+        new_row = position[0] + dx
+        new_col = position[1] + dy
+        if 0 <= new_row < board_size and 0 <= new_col < board_size and board_act[new_row][new_col] == 0:
+            positionMov += 1
+    #print(positionMov)          
+    return positionMov
+
 """def heuristica(yoshi_act, yoshi_riv):
     yoshi_act = count_valid_moves(yoshi_act)
     yoshi_riv = count_valid_moves(yoshi_riv)
@@ -78,7 +88,13 @@ def tree():
     print("Matriz inicial", nodo_inicial.tablero)
     minmaxListPorExpandir.append(nodo_inicial)
     expandirArbol(nodo_inicial, 2)
-    print(obtener_nodos_hoja(nodo_inicial))
+    print("NODOS", obtener_nodos_hoja(nodo_inicial))
+    for hijo in obtener_nodos_hoja(nodo_inicial):
+        verde = count_valid_moves2(hijo.estado, hijo.tablero) 
+        rojo = count_valid_moves2(hijo.estadoContrincante, hijo.tablero)
+        hijo.utilidad = rojo - verde
+        print("Padre: ", hijo.nodo_padre.estado, "nodo: ",
+               hijo.estado,"movimientos validos: ",verde," - ", "contrincante : ", hijo.estadoContrincante, "numeros validos: ",rojo, "Utilidad: ", hijo.utilidad)
 
 
 def expandirArbol(nodoAExpandir, depth=0):
@@ -103,7 +119,7 @@ def expandirArbol(nodoAExpandir, depth=0):
             expandirArbol(nodo, depth - 1)
         else:
 
-            nodo = Nodo(move, utilidad=None, minmax="MAX", tablero=nodoAExpandir.tablero,  estadoContrincante=nodoAExpandir.estadoContrincante, nodo_padre=nodoAExpandir)
+            nodo = Nodo(move, utilidad=None, minmax="MAX", tablero=nodoAExpandir.tablero,  estadoContrincante=nodoAExpandir.estado, nodo_padre=nodoAExpandir)
             if nodo.nodo_padre is not None:
                 nodo.profundidad = nodo.nodo_padre.profundidad + 1
             nodo.agregarPosicionTablero()
@@ -114,10 +130,12 @@ def expandirArbol(nodoAExpandir, depth=0):
 
 def obtener_nodos_hoja(nodo):
     if not nodo.hijos:  # Si el nodo no tiene hijos, es una hoja
-        return [nodo.estado]
+        return [nodo]
     nodos_hoja = []
     for hijo in nodo.hijos:
         nodos_hoja.extend(obtener_nodos_hoja(hijo))
+        
+        
     return nodos_hoja
 
 
