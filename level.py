@@ -2,6 +2,7 @@ import pygame
 import sys
 from settings import clock, screen
 from colors import BLACK, WHITE, GREY
+from sound_button import toggle_sound
 # Inicialización de Pygame
 pygame.init()
 
@@ -11,8 +12,7 @@ background_image = pygame.image.load("./imagenes/inicio.jpg")
 new_width = 500  # Nueva anchura deseada
 new_height = 550  # Nueva altura deseada
 background_image = pygame.transform.scale(background_image, (new_width, new_height))
-pygame.mixer.music.load("./audios/ini.mp3")
-
+pygame.mixer.music.load("./audios/play.mp3")
 sound_icon = pygame.image.load("./imagenes/sound.png")
 sound_icon = pygame.transform.scale(sound_icon, (50, 50))
 stop_sound_icon = pygame.image.load("./imagenes/stop_sound.png")
@@ -40,7 +40,7 @@ def select_level():
             screen.blit(text_surf, text_rect)
 
 
-        sound_button_rect = pygame.Rect(10, 10, 50, 50)  # Tamaño del botón igual al tamaño del icono
+        sound_button_rect = pygame.Rect(5, 0, 50, 50)  
         sound_icon_to_draw = stop_sound_icon if sound_on else sound_icon
         screen.blit(sound_icon_to_draw, sound_button_rect.topleft)
 
@@ -53,16 +53,12 @@ def select_level():
                 x, y = event.pos
                 # Silenciar/escuchar música al hacer clic en el botón
                 if sound_button_rect.collidepoint(x, y):
-                    if sound_on:
-                        pygame.mixer.music.pause()
-                        sound_on = False
-                    else:
-                        pygame.mixer.music.unpause()
-                        sound_on = True
+                    sound_on = toggle_sound(sound_on)  # Llamar a la función toggle_sound
                 else:
                     for level, difficulty, rect in level_rects:
                         if rect.collidepoint(x, y):
                             return level, difficulty
+
 
         pygame.display.flip()
         clock.tick(60)
