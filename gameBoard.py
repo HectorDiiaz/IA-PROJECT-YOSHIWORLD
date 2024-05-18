@@ -7,7 +7,21 @@ from settings import clock, screen_size, board_size, square_size, knight_moves, 
 from colors import BLACK, WHITE, GREEN, GREY, RED
 from nodo import Nodo
 from gameOver import finishing
+from sound_button import toggle_sound 
+
+
 pygame.init()
+
+#SONIDO 
+sound_icon = pygame.image.load("./imagenes/sound_w.png")
+sound_icon = pygame.transform.scale(sound_icon, (50, 50))
+stop_sound_icon = pygame.image.load("./imagenes/stop_sound_w.png")
+stop_sound_icon = pygame.transform.scale(stop_sound_icon, (50, 50))
+sound_on = True 
+sound_button_rect = pygame.Rect(5, 0, 50, 50)  
+sound_icon_to_draw = stop_sound_icon if sound_on else sound_icon
+screen.blit(sound_icon_to_draw, sound_button_rect.topleft)
+
 
 green_count = 0
 red_count = 0
@@ -34,7 +48,7 @@ def handle_click(x, y, player, yoshi_green, yoshi_red):
     return None, player
 
 def draw_board(turn, yoshi_green, yoshi_red):
-    global green_count, red_count
+    global green_count, red_count, sound_on  
     screen.fill(BLACK)  # Limpia la pantalla
     # Contar casillas pintadas por cada jugador
     green_count = sum(row.count(1) for row in board)
@@ -43,10 +57,6 @@ def draw_board(turn, yoshi_green, yoshi_red):
     # Mostrar la cantidad de casillas pintadas por cada jugador
     score_text = f"Yoshi Verde: {green_count}  |  Yoshi Rojo: {red_count}"
     score_surface = font.render(score_text, True, WHITE)
-
-
-
-
     turn_text_rect = score_surface.get_rect(center=(screen_size[0] // 2, 25))
     screen.blit(score_surface, turn_text_rect)
     # Dibuja las casillas del tablero
@@ -64,7 +74,10 @@ def draw_board(turn, yoshi_green, yoshi_red):
     screen.blit(yoshi_green_img, (yoshi_green[1] * square_size, yoshi_green[0] * square_size + 50))
     screen.blit(yoshi_red_img, (yoshi_red[1] * square_size, yoshi_red[0] * square_size + 50))
 
-
+    # Botón de sonido
+    sound_button_rect = pygame.Rect(5, 0, 50, 50)
+    sound_icon_to_draw = stop_sound_icon if sound_on else sound_icon
+    screen.blit(sound_icon_to_draw, sound_button_rect.topleft)
 
 #Prueba terminal
 def check_valid_moves(yoshi_green, yoshi_red):
@@ -93,6 +106,7 @@ def count_valid_moves2(position, board_act):
 minmaxListPorExpandir = []
 minmaxList2 = []
 minmaxlist = []
+
 def tree(positionRojo, positionVerde, level):
     nodo_inicial = Nodo(positionRojo, utilidad=None, minmax="MAX", tablero=board, estadoContrincante=positionVerde, nodo_padre=None)
     # print("Matriz inicial", nodo_inicial.tablero)
@@ -110,7 +124,6 @@ def calcular_utilidad(nodo):
         verde = count_valid_moves2(nodo.estado, nodo.tablero)
         rojo = count_valid_moves2(nodo.estadoContrincante, nodo.tablero)
         nodo.utilidad = rojo - verde
-        
         #nodo.utilidad = rojom - verdem
         # print("Hoja -> Nodo: ", nodo.estado, "Movimientos validos (Verde):", verde, " - Movimientos validos (Rojo):", rojo, " Utilidad: ", nodo.utilidad)
         return nodo.utilidad
@@ -193,6 +206,7 @@ def clear_board():
             board[row][col] = 0
 
 def main():
+    global sound_on
     level, difficulty = select_level()
     yoshi_red = (random.randint(0, 7), random.randint(0, 7))
     yoshi_green = (random.randint(0, 7), random.randint(0, 7))
@@ -226,6 +240,12 @@ def main():
                             yoshi_green = new_pos
                         else:
                             yoshi_red = new_pos
+                    if sound_button_rect.collidepoint(x, y):
+                        sound_on = not sound_on
+                        if sound_on:
+                            pygame.mixer.music.unpause()
+                        else:
+                            pygame.mixer.music.pause()
 
         player_pos = yoshi_green if turn == 1 else yoshi_red
         player_valid_moves = any(is_valid_move(player_pos[0] + dx, player_pos[1] + dy, turn, yoshi_green, yoshi_red) for dx, dy in knight_moves)
@@ -234,7 +254,8 @@ def main():
         draw_board(turn, yoshi_green, yoshi_red)
         pygame.display.flip()
         clock.tick(60)
-    if not check_valid_moves(yoshi_green, yoshi_red):    
+    if not check_valid_moves(yoshi_green, yoshi_red): 
+        pygame.mixer.music.pause()   
         GAME_OVER = 0
         YOU_WIN = 1
         NO_ONE_WINS = 2
