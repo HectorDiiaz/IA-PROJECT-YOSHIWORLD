@@ -1,6 +1,7 @@
 import pygame
 import sys
 import random
+import time
 from level import select_level
 from settings import clock, screen_size, board_size, square_size, knight_moves, board, screen, yoshi_green_img,yoshi_red_img
 from colors import BLACK, WHITE, GREEN, GREY, RED
@@ -8,10 +9,8 @@ from nodo import Nodo
 from gameOver import finishing
 pygame.init()
 
-
 green_count = 0
 red_count = 0
-
 font = pygame.font.Font(None, 36)
 small_font = pygame.font.Font(None, 22)
 
@@ -36,9 +35,7 @@ def handle_click(x, y, player, yoshi_green, yoshi_red):
 
 def draw_board(turn, yoshi_green, yoshi_red):
     global green_count, red_count
-
     screen.fill(BLACK)  # Limpia la pantalla
-
     # Contar casillas pintadas por cada jugador
     green_count = sum(row.count(1) for row in board)
     red_count = sum(row.count(2) for row in board)
@@ -46,10 +43,12 @@ def draw_board(turn, yoshi_green, yoshi_red):
     # Mostrar la cantidad de casillas pintadas por cada jugador
     score_text = f"Yoshi Verde: {green_count}  |  Yoshi Rojo: {red_count}"
     score_surface = font.render(score_text, True, WHITE)
+
+
+
+
     turn_text_rect = score_surface.get_rect(center=(screen_size[0] // 2, 25))
     screen.blit(score_surface, turn_text_rect)
-
-    
     # Dibuja las casillas del tablero
     for row in range(board_size):
         for col in range(board_size):
@@ -185,6 +184,7 @@ def obtener_nodos_hoja(nodo):
     for hijo in nodo.hijos:
         nodos_hoja.extend(obtener_nodos_hoja(hijo))
     return nodos_hoja
+
 def clear_board():
     global board, yoshi_green, yoshi_red
     # Reset the board
@@ -202,8 +202,8 @@ def clear_board():
 
 def main():
     level, difficulty = select_level()
-    yoshi_green = (0, 0)
-    yoshi_red = (0, 7)
+    yoshi_red = (random.randint(0, 7), random.randint(0, 7))
+    yoshi_green = (random.randint(0, 7), random.randint(0, 7))
     while yoshi_red == yoshi_green:
         yoshi_red = (random.randint(0, 7), random.randint(0, 7))
     board[yoshi_green[0]][yoshi_green[1]] = 1
@@ -217,7 +217,8 @@ def main():
             running = False
             continue
         if turn == 1:
-            yoshi_green = tree(yoshi_green,yoshi_red, difficulty)
+            time.sleep(0.2)  # Delay for 2 seconds
+            yoshi_green = tree(yoshi_green, yoshi_red, difficulty)
             board[yoshi_green[0]][yoshi_green[1]] = 1
             turn = 2
         else:
@@ -241,16 +242,16 @@ def main():
         draw_board(turn, yoshi_green, yoshi_red)
         pygame.display.flip()
         clock.tick(60)
-    GAME_OVER = 0
-    YOU_WIN = 1
-    NO_ONE_WINS = 2
-    if turn == 2:
-        print("LOSER GREEN")
-        finishing(YOU_WIN)
-    if turn == 1:
-        finishing(GAME_OVER)
-    else:
-        finishing(NO_ONE_WINS)
-        #clear_board()
+    if not check_valid_moves(yoshi_green, yoshi_red):    
+        GAME_OVER = 0
+        YOU_WIN = 1
+        NO_ONE_WINS = 2
+        if red_count > green_count:
+            print("LOSER GREEN")
+            finishing(YOU_WIN, red_count, green_count)
+        elif red_count < green_count:
+            finishing(GAME_OVER, red_count, green_count)
+        else:
+            finishing(NO_ONE_WINS, red_count, green_count)
     pygame.quit()
     sys.exit()
