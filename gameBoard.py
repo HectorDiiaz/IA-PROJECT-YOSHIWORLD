@@ -56,8 +56,7 @@ def count_valid_moves(position, board_act):
         new_row = position[0] + dx
         new_col = position[1] + dy
         if 0 <= new_row < board_size and 0 <= new_col < board_size and board_act[new_row][new_col] == 0:
-            positionMov.append((new_row, new_col))
-    #print(positionMov)          
+            positionMov.append((new_row, new_col))        
     return positionMov
 
 def count_valid_moves2(position, board_act):
@@ -66,36 +65,97 @@ def count_valid_moves2(position, board_act):
         new_row = position[0] + dx
         new_col = position[1] + dy
         if 0 <= new_row < board_size and 0 <= new_col < board_size and board_act[new_row][new_col] == 0:
-            positionMov += 1
-    #print(positionMov)          
+            positionMov += 1         
     return positionMov
 
-"""def heuristica(yoshi_act, yoshi_riv):
-    yoshi_act = count_valid_moves(yoshi_act)
-    yoshi_riv = count_valid_moves(yoshi_riv)
-
-    return yoshi_act - yoshi_riv"""
 minmaxListPorExpandir = []
 minmaxList2 = []
 minmaxlist = []
-def tree():
-    positionRojo = (1,7)
-    positionVerde = (1,3)
-    print("POSICION INICIAL", positionRojo)
-    print("POSICION INICIAL", positionVerde)
-    print("Matriz inicial", board)
+def tree(positionRojo, positionVerde, level):
     nodo_inicial = Nodo(positionRojo, utilidad=None, minmax="MAX", tablero=board, estadoContrincante=positionVerde, nodo_padre=None)
-    print("Matriz inicial", nodo_inicial.tablero)
+    # print("Matriz inicial", nodo_inicial.tablero)
     minmaxListPorExpandir.append(nodo_inicial)
-    expandirArbol(nodo_inicial, 2)
-    print("NODOS", obtener_nodos_hoja(nodo_inicial))
+    expandirArbol(nodo_inicial, level)
+    # print("NODOS", obtener_nodos_hoja(nodo_inicial))
+    utilidad(nodo_inicial)
+    calcular_utilidad(nodo_inicial)
+    # print("New move", get_next_move(nodo_inicial)[1])
+    return get_next_move(nodo_inicial)[1]
+
+
+def calcular_utilidad(nodo):
+    if not nodo.hijos:  # Si el nodo no tiene hijos, es una hoja
+        verde = count_valid_moves2(nodo.estado, nodo.tablero)
+        rojo = count_valid_moves2(nodo.estadoContrincante, nodo.tablero)
+
+        verdem = len(count_valid_moves(nodo.estado, nodo.tablero))
+        rojom = len(count_valid_moves(nodo.estadoContrincante, nodo.tablero))
+
+        #nodo.utilidad = rojo - verde
+        nodo.utilidad = rojom - verdem
+        # print("Hoja -> Nodo: ", nodo.estado, "Movimientos validos (Verde):", verde, " - Movimientos validos (Rojo):", rojo, " Utilidad: ", nodo.utilidad)
+        return nodo.utilidad
+    # Llamada recursiva para calcular la utilidad de los hijos
+    utilidades_hijos = [calcular_utilidad(hijo) for hijo in nodo.hijos]
+    # Asignar la utilidad al nodo actual basado en su tipo (MIN o MAX)
+    if nodo.minmax == "MAX":
+        nodo.utilidad = max(utilidades_hijos)
+    else:
+        nodo.utilidad = min(utilidades_hijos)
+    #print("Nodo: ", nodo.estado, " Tipo: ", nodo.minmax, " Utilidad calculada: ", nodo.utilidad)
+    return nodo.utilidad
+
+def get_next_move(nodo_inicial):
+    if not nodo_inicial.hijos:
+        return None, None 
+
+    max_utilidad = float('-inf')
+    max_node = None
+    
+    for hijo in nodo_inicial.hijos:
+        if hijo.utilidad > max_utilidad:
+            max_utilidad = hijo.utilidad
+            max_node = hijo
+    
+    return max_utilidad, max_node.estado
+def utilidad(nodo_inicial):
     for hijo in obtener_nodos_hoja(nodo_inicial):
         verde = count_valid_moves2(hijo.estado, hijo.tablero) 
         rojo = count_valid_moves2(hijo.estadoContrincante, hijo.tablero)
         hijo.utilidad = rojo - verde
-        print("Padre: ", hijo.nodo_padre.estado, "nodo: ",
-               hijo.estado,"movimientos validos: ",verde," - ", "contrincante : ", hijo.estadoContrincante, "numeros validos: ",rojo, "Utilidad: ", hijo.utilidad)
+        #print("Padre: ", hijo.nodo_padre.estado, "nodo: ",
+               #hijo.estado,"movimientos validos: ",verde," - ", "contrincante : ", hijo.estadoContrincante, "numeros validos: ",rojo, "Utilidad: ", hijo.utilidad)
 
+# def utilidad_hojas_por_nodo(nodo):
+#     utilidades = []
+#     for hijo in obtener_nodos_hoja(nodo):
+#         utilidades.append(hijo.utilidad)
+#     print("Utilidades", utilidades)
+
+# def minmax(nodo_inicial, depth=0):
+#     if depth == 0:
+#         return
+#     else:
+#         #Obtengo los nodos hoja
+#         obtener_nodos_hoja(nodo_inicial)
+#         #Recorrer nodos hoja
+#         for hijo in obtener_nodos_hoja(nodo_inicial):
+#             if(hijo.nodo_padre is not None):
+#                 utilidades = utilidad_hojas_por_nodo(hijo)
+#                 if hijo.nodo_padre.minmax == "MAX":
+#                     print('U', utilidades)
+#                     #hijo.nodo_padre.minmax = max(utilidades)
+#                     print("NODO", hijo.nodo_padre, "UTILIDAD", hijo.nodo_padre.minmax)
+#                     minmax(hijo.nodo_padre)
+
+#                 else:
+#                     print('U', utilidades)
+#                    #hijo.nodo_padre.minmax = min(utilidades)
+#                     print("NODO", hijo.nodo_padre, "UTILIDAD", hijo.nodo_padre.minmax)
+#                     minmax(hijo.nodo_padre)
+#             if(hijo.nodo_padre is None):
+#                 return
+    #Obtener los nodos hoja, si el padre es el mismo y es min entonces calcula el min de la utilidad
 
 def expandirArbol(nodoAExpandir, depth=0):
     if depth == 0:
@@ -115,7 +175,7 @@ def expandirArbol(nodoAExpandir, depth=0):
             nodo.agregarPosicionTablero()
             minmaxList2.append(nodo)
             nodoAExpandir.agregar_hijo(nodo)
-            print("POSICION", nodo.nodo_padre.estado, nodo.estado, nodo.minmax) 
+            #print("POSICION", nodo.nodo_padre.estado, nodo.estado, nodo.minmax) 
             expandirArbol(nodo, depth - 1)
         else:
 
@@ -125,7 +185,7 @@ def expandirArbol(nodoAExpandir, depth=0):
             nodo.agregarPosicionTablero()
             minmaxList2.append(nodo)
             nodoAExpandir.agregar_hijo(nodo)
-            print("POSICION", nodo.nodo_padre.estado, nodo.estado, nodo.minmax)
+            #print("POSICION", nodo.nodo_padre.estado, nodo.estado, nodo.minmax)
             expandirArbol(nodo, depth - 1) 
 
 def obtener_nodos_hoja(nodo):
@@ -134,12 +194,14 @@ def obtener_nodos_hoja(nodo):
     nodos_hoja = []
     for hijo in nodo.hijos:
         nodos_hoja.extend(obtener_nodos_hoja(hijo))
-        
-        
     return nodos_hoja
 
+def imprimir_nodos_desde_raiz(nodo):
+    print(f"Profundidad: {nodo.profundidad} | Tipo de nodo (min/max): {nodo.minmax} | Estado: {nodo.estado} | Utilidad: {nodo.utilidad} | Nodo padre: {nodo.nodo_padre.estado if nodo.nodo_padre else 'None'}")
+    print("--------------------------------------")
+    [imprimir_nodos_desde_raiz(hijo) for hijo in nodo.hijos]
 
-
+"""
 def main():
     level = select_level()
     print(f"Selected Level: {level}")
@@ -156,7 +218,8 @@ def main():
     running = True
     while running:
         if turn == 2:
-            tree()
+            yoshi_red = tree(yoshi_red,yoshi_green, 2)
+            board[yoshi_red[0]][yoshi_red[1]] = 2
             turn = 1
         if not check_valid_moves(yoshi_green, yoshi_red):
             running = False
@@ -181,7 +244,64 @@ def main():
                     player_valid_moves = any(is_valid_move(player_pos[0] + dx, player_pos[1] + dy, turn, yoshi_green, yoshi_red) for dx, dy in knight_moves)
                     if not player_valid_moves:
                         # If the current player has no valid moves, switch the turn to the other player
+                        print("No valid moves for player", turn)
                         turn = 3 - turn
+        draw_board(turn, yoshi_green, yoshi_red)
+        pygame.display.flip()
+        clock.tick(60)
+
+    pygame.quit()
+    sys.exit()"""
+
+def main():
+    level, difficulty = select_level()
+    #print(f"Selected Level: {level}")
+    # Initial positions for both Yoshis
+    yoshi_green = (0,0)
+    yoshi_red = (0,7)
+    while yoshi_red == yoshi_green:
+        yoshi_red = (random.randint(0, 7), random.randint(0, 7))
+    board[yoshi_green[0]][yoshi_green[1]] = 1
+    board[yoshi_red[0]][yoshi_red[1]] = 2
+
+    #yoshi_green = (1,3)
+    #yoshi_red = (1,7)
+    turn = 2  # Red starts
+
+    running = True
+    while running:
+        if not check_valid_moves(yoshi_green, yoshi_red):
+                running = False
+                continue
+        if turn == 2:
+            yoshi_red = tree(yoshi_red,yoshi_green, difficulty)
+            board[yoshi_red[0]][yoshi_red[1]] = 2
+            turn = 1
+        else:
+            # Turno del jugador humano
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    x, y = pygame.mouse.get_pos()
+                    new_pos, new_turn = handle_click(x, y, turn, yoshi_green, yoshi_red)
+                    if new_pos:
+                        turn = new_turn  # Update the turn
+                        if turn == 2:
+                            yoshi_green = new_pos
+                        else:
+                            yoshi_red = new_pos
+                        if turn == 1:
+                            player_pos = yoshi_green
+                        else:
+                            player_pos = yoshi_red
+
+        player_pos = yoshi_green if turn == 1 else yoshi_red            
+        player_valid_moves = any(is_valid_move(player_pos[0] + dx, player_pos[1] + dy, turn, yoshi_green, yoshi_red) for dx, dy in knight_moves)
+        if not player_valid_moves:
+            #print("No valid moves for player", turn)
+            # If the current player has no valid moves, switch the turn to the other player
+            turn = 3 - turn
         draw_board(turn, yoshi_green, yoshi_red)
         pygame.display.flip()
         clock.tick(60)
