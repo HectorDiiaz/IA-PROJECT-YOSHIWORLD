@@ -8,7 +8,6 @@ pygame.init()
 WIDTH, HEIGHT = 500, 550
 
 
-
 # Set up the display
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Game Interface")
@@ -42,23 +41,13 @@ def finishing(game_outcome, red_count, green_count):
     running = True
     textGreen = f'Yoshi Verde: {green_count}'
     textRed = f'Yoshi Rojo: {red_count}'
-    if game_outcome == GAME_OVER:
-        pygame.mixer.music.load("./audios/game_over.mp3")
-        pygame.mixer.music.play()
-    elif game_outcome == YOU_WIN:
-        pygame.mixer.music.load("./audios/winner.mp3")
-        pygame.mixer.music.play()
-    elif game_outcome == NO_ONE_WINS:
-        pygame.mixer.music.load("./audios/emp.mp3")
-        pygame.mixer.music.play()
-    
     while running:
         screen.fill(colors.WHITE)
         if game_outcome == GAME_OVER:
 
             screen.blit(background_image_gameover, (0, 0))
             draw_text('Game Over', font_large, colors.RED, screen, WIDTH // 2, HEIGHT // 2 - 220)
-            draw_text(textGreen, font_small, colors.AMARILLO, screen, WIDTH // 2, HEIGHT // 2 + 115)
+            draw_text(textGreen, font_small, colors.NARANJA, screen, WIDTH // 2, HEIGHT // 2 + 115)
             draw_text(textRed, font_small, colors.NARANJA, screen, WIDTH // 2, HEIGHT // 2 + 150)
         elif game_outcome == YOU_WIN:
             screen.blit(background_image_winner, (0, 0))
