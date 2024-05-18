@@ -16,7 +16,7 @@ small_font = pygame.font.Font(None, 22)
 font_large = pygame.font.Font(None, 74)
 font_small = pygame.font.Font(None, 50)
 
-background_image_winner = pygame.image.load("./imagenes/winner2.jpg")
+background_image_winner = pygame.image.load("./imagenes/Winner.jpg")
 background_image_gameover = pygame.image.load("./imagenes/gameOve.jpg")
 background_image_winner   = pygame.transform.scale(background_image_winner, (WIDTH, HEIGHT))
 background_image_gameover = pygame.transform.scale(background_image_gameover, (WIDTH, HEIGHT))
@@ -46,23 +46,23 @@ def finishing(game_outcome, red_count, green_count):
         if game_outcome == GAME_OVER:
 
             screen.blit(background_image_gameover, (0, 0))
-            draw_text('Game Over', font_large, colors.RED, screen, WIDTH // 2, HEIGHT // 2 - 200)
-            draw_text(textGreen, font_small, colors.BLACK, screen, WIDTH // 2, HEIGHT // 2 - 10)
-            draw_text(textRed, font_small, colors.BLACK, screen, WIDTH // 2, HEIGHT // 2 - 60)
+            draw_text('Game Over', font_large, colors.RED, screen, WIDTH // 2, HEIGHT // 2 - 220)
+            draw_text(textGreen, font_small, colors.AMARILLO, screen, WIDTH // 2, HEIGHT // 2 + 115)
+            draw_text(textRed, font_small, colors.NARANJA, screen, WIDTH // 2, HEIGHT // 2 + 150)
         elif game_outcome == YOU_WIN:
             screen.blit(background_image_winner, (0, 0))
-            draw_text('You Win', font_large, colors.GREEN, screen, WIDTH // 2, HEIGHT // 2 - 200)
-            draw_text(textGreen, font_small, colors.BLACK, screen, WIDTH // 2, HEIGHT // 2 - 10)
-            draw_text(textRed, font_small, colors.BLACK, screen, WIDTH // 2, HEIGHT // 2 - 60)
+            draw_text('You Win', font_large, colors.GREEN, screen, WIDTH // 2, HEIGHT // 2 - 220)
+            draw_text(textGreen, font_small, colors.WHITE, screen, WIDTH // 2, HEIGHT // 2 + 115)
+            draw_text(textRed, font_small, colors.WHITE, screen, WIDTH // 2, HEIGHT // 2 + 150)
         elif game_outcome == NO_ONE_WINS:
             screen.blit(background_image_winner, (0, 0))
-            draw_text('No One Wins', font_large, colors.GREY, screen, WIDTH // 2, HEIGHT // 2 - 200)
-            draw_text(textGreen, font_small, colors.BLACK, screen, WIDTH // 2, HEIGHT // 2 - 10)
-            draw_text(textRed, font_small, colors.BLACK, screen, WIDTH // 2, HEIGHT // 2 - 60)
+            draw_text('No One Wins', font_large, colors.GREY, screen, WIDTH // 2, HEIGHT // 2 - 220)
+            draw_text(textGreen, font_small, colors.BLACK, screen, WIDTH // 2, HEIGHT // 2 - 115)
+            draw_text(textRed, font_small, colors.BLACK, screen, WIDTH // 2, HEIGHT // 2 - 150)
         # Draw button
-        button_rect = pygame.Rect(WIDTH // 2 - 150, HEIGHT // 2 + 50, 300, 75)
+        button_rect = pygame.Rect(WIDTH // 2 - 150, HEIGHT // 2 + 180, 300, 75)
         pygame.draw.rect(screen, colors.RED, button_rect)
-        draw_text('Jugar de nuevo', font_small, colors.WHITE, screen, WIDTH // 2, HEIGHT // 2 + 87)
+        draw_text('Jugar de nuevo', font_small, colors.WHITE, screen, WIDTH // 2, HEIGHT // 2 + 215)
         
         # Event handling
         for event in pygame.event.get():

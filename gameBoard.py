@@ -186,19 +186,11 @@ def obtener_nodos_hoja(nodo):
     return nodos_hoja
 
 def clear_board():
-    global board, yoshi_green, yoshi_red
+    global board
     # Reset the board
     for row in range(board_size):
         for col in range(board_size):
             board[row][col] = 0
-    # Reset Yoshi positions
-    yoshi_green = (0, 0)
-    yoshi_red = (0, 7)
-    while yoshi_red == yoshi_green:
-        yoshi_red = (random.randint(0, 7), random.randint(0, 7))
-    board[yoshi_green[0]][yoshi_green[1]] = 1
-    board[yoshi_red[0]][yoshi_red[1]] = 2
-    return yoshi_green, yoshi_red
 
 def main():
     level, difficulty = select_level()

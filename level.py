@@ -1,7 +1,7 @@
 import pygame
 import sys
 from settings import clock, screen
-from colors import BLACK, WHITE, GREY
+from colors import BLACK, WHITE, GREY, BLUE1, BLUE2, BLUE3
 # Inicialización de Pygame
 pygame.init()
 
@@ -11,7 +11,7 @@ background_image = pygame.image.load("./imagenes/inicio.jpg")
 new_width = 500  # Nueva anchura deseada
 new_height = 550  # Nueva altura deseada
 background_image = pygame.transform.scale(background_image, (new_width, new_height))
-pygame.mixer.music.load("./audios/ini.mp3")
+pygame.mixer.music.load("./audios/play.mp3")
 
 sound_icon = pygame.image.load("./imagenes/sound.png")
 sound_icon = pygame.transform.scale(sound_icon, (50, 50))
@@ -23,18 +23,19 @@ def select_level():
     levels = {"Principiante": 2, "Amateur": 4, "Experto": 6}
     level_rects = []
     for index, (level, difficulty) in enumerate(levels.items()):
-        rect = pygame.Rect(50, 150 + index * 60, 400, 50)
+        rect = pygame.Rect(50, 300 + index * 60, 400, 50)
         level_rects.append((level, difficulty, rect))
 
     pygame.mixer.music.play(-1) 
     sound_on = True
-
+    blue_colors = [BLUE1, BLUE2, BLUE3]
 
     while True:
         screen.fill(BLACK)
         screen.blit(background_image, (0, 0))
         for level, difficulty, rect in level_rects:
-            pygame.draw.rect(screen, GREY, rect)
+            color_index = (difficulty // 2) % len(blue_colors)  # Ajustar índice para acceder a la lista
+            pygame.draw.rect(screen, blue_colors[color_index], rect)
             text_surf = font.render(f"{level}", True, WHITE)
             text_rect = text_surf.get_rect(center=rect.center)
             screen.blit(text_surf, text_rect)
