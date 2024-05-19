@@ -126,33 +126,37 @@ minmaxlist = []
 
 def tree(positionRojo, positionVerde, level):
     nodo_inicial = Nodo(positionRojo, utilidad=None, minmax="MAX", tablero=board, estadoContrincante=positionVerde, nodo_padre=None)
-    # print("Matriz inicial", nodo_inicial.tablero)
     minmaxListPorExpandir.append(nodo_inicial)
     expandirArbol(nodo_inicial, level)
-    # print("NODOS", obtener_nodos_hoja(nodo_inicial))
-    utilidad(nodo_inicial)
     calcular_utilidad(nodo_inicial)
-    # print("New move", get_next_move(nodo_inicial)[1])
     return get_next_move(nodo_inicial)[1]
 
 
-def calcular_utilidad(nodo):
+
+def calcular_utilidad(nodo, w1=1, w2=1):
     if not nodo.hijos:  # Si el nodo no tiene hijos, es una hoja
-        verde = count_valid_moves2(nodo.estado, nodo.tablero)
-        rojo = count_valid_moves2(nodo.estadoContrincante, nodo.tablero)
-        nodo.utilidad = rojo - verde
-        #nodo.utilidad = rojom - verdem
-        # print("Hoja -> Nodo: ", nodo.estado, "Movimientos validos (Verde):", verde, " - Movimientos validos (Rojo):", rojo, " Utilidad: ", nodo.utilidad)
+        # Casillas pintadas por cada Yoshi
+        verde_casillas = sum(row.count(1) for row in nodo.tablero)
+        rojo_casillas = sum(row.count(2) for row in nodo.tablero)
+
+        # Movimientos disponibles para cada Yoshi
+        verde_movimientos = count_valid_moves2(nodo.estado, nodo.tablero)
+        rojo_movimientos = count_valid_moves2(nodo.estadoContrincante, nodo.tablero)
+
+        # Heurística combinada
+        nodo.utilidad = w1 * (rojo_casillas - verde_casillas) + w2 * (rojo_movimientos - verde_movimientos)
         return nodo.utilidad
+
     # Llamada recursiva para calcular la utilidad de los hijos
-    utilidades_hijos = [calcular_utilidad(hijo) for hijo in nodo.hijos]
+    utilidades_hijos = [calcular_utilidad(hijo, w1, w2) for hijo in nodo.hijos]
+
     # Asignar la utilidad al nodo actual basado en su tipo (MIN o MAX)
     if nodo.minmax == "MAX":
         nodo.utilidad = max(utilidades_hijos)
     else:
         nodo.utilidad = min(utilidades_hijos)
-    #print("Nodo: ", nodo.estado, " Tipo: ", nodo.minmax, " Utilidad calculada: ", nodo.utilidad)
     return nodo.utilidad
+
 
 def get_next_move(nodo_inicial):
     if not nodo_inicial.hijos:
@@ -271,8 +275,8 @@ def main():
         draw_board(turn, yoshi_green, yoshi_red)
         pygame.display.flip()
         clock.tick(60)
-    if not check_valid_moves(yoshi_green, yoshi_red): 
-        pygame.mixer.music.pause()   
+    if not check_valid_moves(yoshi_green, yoshi_red):
+        pygame.mixer.music.pause()
         GAME_OVER = 0
         YOU_WIN = 1
         NO_ONE_WINS = 2
