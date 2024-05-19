@@ -28,6 +28,10 @@ red_count = 0
 font = pygame.font.Font(None, 36)
 small_font = pygame.font.Font(None, 22)
 
+background_img = pygame.image.load("./imagenes/fondo.jpeg")
+background_img   = pygame.transform.scale(background_img, (500, 550))
+
+
 def is_valid_move(row, col, player, yoshi_green, yoshi_red):
     if player == 1:
         current_pos = yoshi_green
@@ -48,27 +52,40 @@ def handle_click(x, y, player, yoshi_green, yoshi_red):
     return None, player
 
 def draw_board(turn, yoshi_green, yoshi_red):
-    global green_count, red_count, sound_on  
+    global green_count, red_count, sound_on
     screen.fill(BLACK)  # Limpia la pantalla
+
+    # Dibujar la imagen de fondo
+    screen.blit(background_img, (0, 0))
+
     # Contar casillas pintadas por cada jugador
     green_count = sum(row.count(1) for row in board)
     red_count = sum(row.count(2) for row in board)
 
     # Mostrar la cantidad de casillas pintadas por cada jugador
     score_text = f"Yoshi Verde: {green_count}  |  Yoshi Rojo: {red_count}"
-    score_surface = font.render(score_text, True, WHITE)
+    score_surface = font.render(score_text, True, BLACK)
     turn_text_rect = score_surface.get_rect(center=(screen_size[0] // 2, 25))
     screen.blit(score_surface, turn_text_rect)
-    # Dibuja las casillas del tablero
+
+    # Dibuja las casillas del tablero con opacidad para las casillas blancas
     for row in range(board_size):
         for col in range(board_size):
-            color = WHITE if board[row][col] == 0 else GREEN if board[row][col] == 1 else RED
-            pygame.draw.rect(screen, color, (col * square_size, row * square_size + 50, square_size, square_size))
+            if board[row][col] == 0:
+                s = pygame.Surface((square_size, square_size))  # Tamaño de la casilla
+                s.set_alpha(150)  # Nivel de opacidad
+                s.fill(WHITE)  # Rellenar la superficie
+                screen.blit(s, (col * square_size, row * square_size + 50))
+                # Dibuja el borde gris oscuro
+                pygame.draw.rect(screen, GREY, (col * square_size, row * square_size + 50, square_size, square_size), 1)
+            else:
+                color = GREEN if board[row][col] == 1 else RED
+                pygame.draw.rect(screen, color, (col * square_size, row * square_size + 50, square_size, square_size))
 
     # Dibuja la cuadrícula
     for i in range(board_size + 1):
-        pygame.draw.line(screen, GREY, (0, i * square_size + 50), (screen_size[0], i * square_size + 50))
-        pygame.draw.line(screen, GREY, (i * square_size, 50), (i * square_size, screen_size[0] + 50))
+        pygame.draw.line(screen, BLACK, (0, i * square_size + 50), (screen_size[0], i * square_size + 50))
+        pygame.draw.line(screen, BLACK, (i * square_size, 50), (i * square_size, screen_size[0] + 50))
 
     # Dibuja las imágenes de Yoshi
     screen.blit(yoshi_green_img, (yoshi_green[1] * square_size, yoshi_green[0] * square_size + 50))

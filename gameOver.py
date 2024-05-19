@@ -18,8 +18,10 @@ font_small = pygame.font.Font(None, 50)
 
 background_image_winner = pygame.image.load("./imagenes/Winner.jpg")
 background_image_gameover = pygame.image.load("./imagenes/gameOve.jpg")
+background_image_empate = pygame.image.load("./imagenes/empate.jpg")
 background_image_winner   = pygame.transform.scale(background_image_winner, (WIDTH, HEIGHT))
 background_image_gameover = pygame.transform.scale(background_image_gameover, (WIDTH, HEIGHT))
+background_image_empate = pygame.transform.scale(background_image_empate, (WIDTH, HEIGHT))
 
 
 # Game states
@@ -41,10 +43,18 @@ def finishing(game_outcome, red_count, green_count):
     running = True
     textGreen = f'Yoshi Verde: {green_count}'
     textRed = f'Yoshi Rojo: {red_count}'
+    if game_outcome == GAME_OVER:
+        pygame.mixer.music.load("./audios/game_over.mp3")
+        pygame.mixer.music.play()
+    elif game_outcome == YOU_WIN:
+        pygame.mixer.music.load("./audios/winner.mp3")
+        pygame.mixer.music.play()
+    elif game_outcome == NO_ONE_WINS:
+        pygame.mixer.music.load("./audios/emp.mp3")
+        pygame.mixer.music.play()
     while running:
         screen.fill(colors.WHITE)
         if game_outcome == GAME_OVER:
-
             screen.blit(background_image_gameover, (0, 0))
             draw_text('Game Over', font_large, colors.RED, screen, WIDTH // 2, HEIGHT // 2 - 220)
             draw_text(textGreen, font_small, colors.NARANJA, screen, WIDTH // 2, HEIGHT // 2 + 115)
@@ -55,7 +65,7 @@ def finishing(game_outcome, red_count, green_count):
             draw_text(textGreen, font_small, colors.WHITE, screen, WIDTH // 2, HEIGHT // 2 + 115)
             draw_text(textRed, font_small, colors.WHITE, screen, WIDTH // 2, HEIGHT // 2 + 150)
         elif game_outcome == NO_ONE_WINS:
-            screen.blit(background_image_winner, (0, 0))
+            screen.blit(background_image_empate, (0, 0))
             draw_text('No One Wins', font_large, colors.GREY, screen, WIDTH // 2, HEIGHT // 2 - 220)
             draw_text(textGreen, font_small, colors.BLACK, screen, WIDTH // 2, HEIGHT // 2 - 115)
             draw_text(textRed, font_small, colors.BLACK, screen, WIDTH // 2, HEIGHT // 2 - 150)
