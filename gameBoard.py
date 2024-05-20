@@ -1,16 +1,36 @@
 import pygame
 import sys
 import random
+import time
 from level import select_level
 from settings import clock, screen_size, board_size, square_size, knight_moves, board, screen, yoshi_green_img,yoshi_red_img
 from colors import BLACK, WHITE, GREEN, GREY, RED
 from nodo import Nodo
 from gameOver import finishing
-import time
+from sound_button import toggle_sound 
+
+
 pygame.init()
 
+#SONIDO 
+sound_icon = pygame.image.load("./imagenes/sound_w.png")
+sound_icon = pygame.transform.scale(sound_icon, (50, 50))
+stop_sound_icon = pygame.image.load("./imagenes/stop_sound_w.png")
+stop_sound_icon = pygame.transform.scale(stop_sound_icon, (50, 50))
+sound_on = True 
+sound_button_rect = pygame.Rect(5, 0, 50, 50)  
+sound_icon_to_draw = stop_sound_icon if sound_on else sound_icon
+screen.blit(sound_icon_to_draw, sound_button_rect.topleft)
+
+
+green_count = 0
+red_count = 0
 font = pygame.font.Font(None, 36)
 small_font = pygame.font.Font(None, 22)
+
+background_img = pygame.image.load("./imagenes/fondo.jpeg")
+background_img   = pygame.transform.scale(background_img, (500, 550))
+
 
 def is_valid_move(row, col, player, yoshi_green, yoshi_red):
     if player == 1:
@@ -32,7 +52,11 @@ def handle_click(x, y, player, yoshi_green, yoshi_red):
     return None, player
 
 def draw_board(turn, yoshi_green, yoshi_red):
+    global green_count, red_count, sound_on
     screen.fill(BLACK)  # Limpia la pantalla
+
+    # Dibujar la imagen de fondo
+    screen.blit(background_img, (0, 0))
 
     # Contar casillas pintadas por cada jugador
     green_count = sum(row.count(1) for row in board)
@@ -40,29 +64,37 @@ def draw_board(turn, yoshi_green, yoshi_red):
 
     # Mostrar la cantidad de casillas pintadas por cada jugador
     score_text = f"Yoshi Verde: {green_count}  |  Yoshi Rojo: {red_count}"
-    score_surface = font.render(score_text, True, WHITE)
-
-
-
-
+    score_surface = font.render(score_text, True, BLACK)
     turn_text_rect = score_surface.get_rect(center=(screen_size[0] // 2, 25))
     screen.blit(score_surface, turn_text_rect)
-    # Dibuja las casillas del tablero
+
+    # Dibuja las casillas del tablero con opacidad para las casillas blancas
     for row in range(board_size):
         for col in range(board_size):
-            color = WHITE if board[row][col] == 0 else GREEN if board[row][col] == 1 else RED
-            pygame.draw.rect(screen, color, (col * square_size, row * square_size + 50, square_size, square_size))
+            if board[row][col] == 0:
+                s = pygame.Surface((square_size, square_size))  # Tamaño de la casilla
+                s.set_alpha(150)  # Nivel de opacidad
+                s.fill(WHITE)  # Rellenar la superficie
+                screen.blit(s, (col * square_size, row * square_size + 50))
+                # Dibuja el borde gris oscuro
+                pygame.draw.rect(screen, GREY, (col * square_size, row * square_size + 50, square_size, square_size), 1)
+            else:
+                color = GREEN if board[row][col] == 1 else RED
+                pygame.draw.rect(screen, color, (col * square_size, row * square_size + 50, square_size, square_size))
 
     # Dibuja la cuadrícula
     for i in range(board_size + 1):
-        pygame.draw.line(screen, GREY, (0, i * square_size + 50), (screen_size[0], i * square_size + 50))
-        pygame.draw.line(screen, GREY, (i * square_size, 50), (i * square_size, screen_size[0] + 50))
+        pygame.draw.line(screen, BLACK, (0, i * square_size + 50), (screen_size[0], i * square_size + 50))
+        pygame.draw.line(screen, BLACK, (i * square_size, 50), (i * square_size, screen_size[0] + 50))
 
     # Dibuja las imágenes de Yoshi
     screen.blit(yoshi_green_img, (yoshi_green[1] * square_size, yoshi_green[0] * square_size + 50))
     screen.blit(yoshi_red_img, (yoshi_red[1] * square_size, yoshi_red[0] * square_size + 50))
 
-
+    # Botón de sonido
+    sound_button_rect = pygame.Rect(5, 0, 50, 50)
+    sound_icon_to_draw = stop_sound_icon if sound_on else sound_icon
+    screen.blit(sound_icon_to_draw, sound_button_rect.topleft)
 
 #Prueba terminal
 def check_valid_moves(yoshi_green, yoshi_red):
@@ -91,36 +123,57 @@ def count_valid_moves2(position, board_act):
 minmaxListPorExpandir = []
 minmaxList2 = []
 minmaxlist = []
+
 def tree(positionRojo, positionVerde, level):
     nodo_inicial = Nodo(positionRojo, utilidad=None, minmax="MAX", tablero=board, estadoContrincante=positionVerde, nodo_padre=None)
-    # print("Matriz inicial", nodo_inicial.tablero)
     minmaxListPorExpandir.append(nodo_inicial)
     expandirArbol(nodo_inicial, level)
-    # print("NODOS", obtener_nodos_hoja(nodo_inicial))
-    utilidad(nodo_inicial)
     calcular_utilidad(nodo_inicial)
-    # print("New move", get_next_move(nodo_inicial)[1])
+    imprimir_nodos_desde_raiz(nodo_inicial)
     return get_next_move(nodo_inicial)[1]
 
 
+central_squares = [(2,2), (2,3), (2,4), (2,5), (3,2), (3,3), (3,4), (3,5), (4,2), (4,3), (4,4), (4,5), (5,2), (5,3), (5,4), (5,5)]
+def imprimir_nodos_desde_raiz(nodo):
+    print(f"Profundidad: {nodo.profundidad} | Tipo de nodo (min/max): {nodo.minmax} | Estado: {nodo.estado} | Utilidad: {nodo.utilidad} | Nodo padre: {nodo.nodo_padre.estado if nodo.nodo_padre else 'None'}")
+    print("--------------------------------------")
+    [imprimir_nodos_desde_raiz(hijo) for hijo in nodo.hijos]
 def calcular_utilidad(nodo):
     if not nodo.hijos:  # Si el nodo no tiene hijos, es una hoja
-        verde = count_valid_moves2(nodo.estado, nodo.tablero)
-        rojo = count_valid_moves2(nodo.estadoContrincante, nodo.tablero)
-        nodo.utilidad = rojo - verde
+        # Casillas pintadas por cada Yoshi
+        verde_casillas = sum(row.count(1) for row in nodo.tablero)
+        rojo_casillas = sum(row.count(2) for row in nodo.tablero)
+
+        # Movimientos disponibles para cada Yoshi
+        verde_movimientos = count_valid_moves2(nodo.estado, nodo.tablero)
+        rojo_movimientos = count_valid_moves2(nodo.estadoContrincante, nodo.tablero)
+
+        # Casillas centrales pintadas por cada Yoshi
+        verde_centrales = sum(1 for row, col in central_squares if nodo.tablero[row][col] == 1)
+        rojo_centrales = sum(1 for row, col in central_squares if nodo.tablero[row][col] == 2)
+      
+        print("Movimientos disponibles verde: (",nodo.estado,") ", verde_movimientos, "Movimientos disponibles rojo:  (",nodo.estadoContrincante,") ", rojo_movimientos, "Resultado: ", (verde_movimientos-rojo_movimientos))
+        print("Casillas centrales verde: ", verde_centrales, "Casillas centrales rojo: ", rojo_centrales, "Resultado: ", (verde_centrales-rojo_centrales))
+        # Heurística combinada
+        nodo.utilidad = (
+                        (rojo_movimientos -verde_movimientos ) + 
+                        (rojo_centrales - verde_centrales ))
+        print("RESULTADO DE LA UTILIDAD: ", (verde_movimientos - rojo_movimientos) + 
+                        (verde_centrales - rojo_centrales))
         
-        #nodo.utilidad = rojom - verdem
-        # print("Hoja -> Nodo: ", nodo.estado, "Movimientos validos (Verde):", verde, " - Movimientos validos (Rojo):", rojo, " Utilidad: ", nodo.utilidad)
         return nodo.utilidad
+
     # Llamada recursiva para calcular la utilidad de los hijos
     utilidades_hijos = [calcular_utilidad(hijo) for hijo in nodo.hijos]
+
     # Asignar la utilidad al nodo actual basado en su tipo (MIN o MAX)
     if nodo.minmax == "MAX":
         nodo.utilidad = max(utilidades_hijos)
     else:
         nodo.utilidad = min(utilidades_hijos)
-    #print("Nodo: ", nodo.estado, " Tipo: ", nodo.minmax, " Utilidad calculada: ", nodo.utilidad)
     return nodo.utilidad
+
+
 
 def get_next_move(nodo_inicial):
     if not nodo_inicial.hijos:
@@ -182,25 +235,38 @@ def obtener_nodos_hoja(nodo):
     for hijo in nodo.hijos:
         nodos_hoja.extend(obtener_nodos_hoja(hijo))
     return nodos_hoja
+
 def clear_board():
-    global board, yoshi_green, yoshi_red
+    global board
     # Reset the board
     for row in range(board_size):
         for col in range(board_size):
             board[row][col] = 0
-    # Reset Yoshi positions
-    yoshi_green = (0, 0)
-    yoshi_red = (0, 7)
+
+def main():
+    global sound_on
+    level, difficulty = select_level()
+    yoshi_red = (random.randint(0, 7), random.randint(0, 7))
+    yoshi_green = (random.randint(0, 7), random.randint(0, 7))
     while yoshi_red == yoshi_green:
         yoshi_red = (random.randint(0, 7), random.randint(0, 7))
     board[yoshi_green[0]][yoshi_green[1]] = 1
     board[yoshi_red[0]][yoshi_red[1]] = 2
     return yoshi_green, yoshi_red
 
+def clear_board():
+    global board
+    # Reset the board
+    for row in range(board_size):
+        for col in range(board_size):
+            board[row][col] = 0
+
 def main():
+    global sound_on
     level, difficulty = select_level()
-    yoshi_green = (0, 0)
-    yoshi_red = (0, 7)
+    yoshi_red = (random.randint(0, 7), random.randint(0, 7))
+    yoshi_green = (random.randint(0, 7), random.randint(0, 7))
+   
     while yoshi_red == yoshi_green:
         yoshi_red = (random.randint(0, 7), random.randint(0, 7))
     board[yoshi_green[0]][yoshi_green[1]] = 1
@@ -216,7 +282,7 @@ def main():
        
 
         if turn == 1:
-            time.sleep(0.5)  # Delay for 2 seconds
+            time.sleep(0.2)  # Delay for 2 seconds
             yoshi_green = tree(yoshi_green, yoshi_red, difficulty)
             board[yoshi_green[0]][yoshi_green[1]] = 1
 
@@ -234,6 +300,12 @@ def main():
                             yoshi_green = new_pos
                         else:
                             yoshi_red = new_pos
+                    if sound_button_rect.collidepoint(x, y):
+                        sound_on = not sound_on
+                        if sound_on:
+                            pygame.mixer.music.unpause()
+                        else:
+                            pygame.mixer.music.pause()
 
         player_pos = yoshi_green if turn == 1 else yoshi_red
         player_valid_moves = any(is_valid_move(player_pos[0] + dx, player_pos[1] + dy, turn, yoshi_green, yoshi_red) for dx, dy in knight_moves)
@@ -242,16 +314,17 @@ def main():
         draw_board(turn, yoshi_green, yoshi_red)
         pygame.display.flip()
         clock.tick(60)
-    GAME_OVER = 0
-    YOU_WIN = 1
-    NO_ONE_WINS = 2
-    if turn == 2:
-        print("LOSER GREEN")
-        finishing(YOU_WIN)
-    if turn == 1:
-        finishing(GAME_OVER)
-    else:
-        finishing(NO_ONE_WINS)
-        #clear_board()
+    if not check_valid_moves(yoshi_green, yoshi_red):
+        pygame.mixer.music.pause()
+        GAME_OVER = 0
+        YOU_WIN = 1
+        NO_ONE_WINS = 2
+        if red_count > green_count:
+            print("LOSER GREEN")
+            finishing(YOU_WIN, red_count, green_count)
+        elif red_count < green_count:
+            finishing(GAME_OVER, red_count, green_count)
+        else:
+            finishing(NO_ONE_WINS, red_count, green_count)
     pygame.quit()
     sys.exit()
