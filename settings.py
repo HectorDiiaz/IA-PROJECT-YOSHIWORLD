@@ -1,7 +1,7 @@
 import pygame
 
 clock = pygame.time.Clock()
-screen_size = (500, 500)
+screen_size = (500, 550)
 screen = pygame.display.set_mode(screen_size)
 pygame.display.set_caption("Yoshi's World")
 board_size = 8
