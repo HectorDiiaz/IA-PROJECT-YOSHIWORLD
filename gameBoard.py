@@ -31,6 +31,8 @@ small_font = pygame.font.Font(None, 22)
 background_img = pygame.image.load("./imagenes/fondo.jpeg")
 background_img   = pygame.transform.scale(background_img, (500, 550))
 
+central_squares = [(2,2), (2,3), (2,4), (2,5), (3,2), (3,3), (3,4), (3,5), (4,2), (4,3), (4,4), (4,5), (5,2), (5,3), (5,4), (5,5)]
+
 
 def is_valid_move(row, col, player, yoshi_green, yoshi_red):
     if player == 1:
@@ -120,30 +122,21 @@ def count_valid_moves2(position, board_act):
             positionMov += 1         
     return positionMov
 
-minmaxListPorExpandir = []
-minmaxList2 = []
-minmaxlist = []
-
 def tree(positionRojo, positionVerde, level):
     nodo_inicial = Nodo(positionRojo, utilidad=None, minmax="MAX", tablero=board, estadoContrincante=positionVerde, nodo_padre=None)
-    minmaxListPorExpandir.append(nodo_inicial)
     expandirArbol(nodo_inicial, level)
     calcular_utilidad(nodo_inicial)
-    imprimir_nodos_desde_raiz(nodo_inicial)
+    # imprimir_nodos_desde_raiz(nodo_inicial)
     return get_next_move(nodo_inicial)[1]
 
-
-central_squares = [(2,2), (2,3), (2,4), (2,5), (3,2), (3,3), (3,4), (3,5), (4,2), (4,3), (4,4), (4,5), (5,2), (5,3), (5,4), (5,5)]
 def imprimir_nodos_desde_raiz(nodo):
+
     print(f"Profundidad: {nodo.profundidad} | Tipo de nodo (min/max): {nodo.minmax} | Estado: {nodo.estado} | Utilidad: {nodo.utilidad} | Nodo padre: {nodo.nodo_padre.estado if nodo.nodo_padre else 'None'}")
     print("--------------------------------------")
     [imprimir_nodos_desde_raiz(hijo) for hijo in nodo.hijos]
+
 def calcular_utilidad(nodo):
     if not nodo.hijos:  # Si el nodo no tiene hijos, es una hoja
-        # Casillas pintadas por cada Yoshi
-        verde_casillas = sum(row.count(1) for row in nodo.tablero)
-        rojo_casillas = sum(row.count(2) for row in nodo.tablero)
-
         # Movimientos disponibles para cada Yoshi
         verde_movimientos = count_valid_moves2(nodo.estado, nodo.tablero)
         rojo_movimientos = count_valid_moves2(nodo.estadoContrincante, nodo.tablero)
@@ -152,14 +145,15 @@ def calcular_utilidad(nodo):
         verde_centrales = sum(1 for row, col in central_squares if nodo.tablero[row][col] == 1)
         rojo_centrales = sum(1 for row, col in central_squares if nodo.tablero[row][col] == 2)
       
-        print("Movimientos disponibles verde: (",nodo.estado,") ", verde_movimientos, "Movimientos disponibles rojo:  (",nodo.estadoContrincante,") ", rojo_movimientos, "Resultado: ", (verde_movimientos-rojo_movimientos))
-        print("Casillas centrales verde: ", verde_centrales, "Casillas centrales rojo: ", rojo_centrales, "Resultado: ", (verde_centrales-rojo_centrales))
+        # print("Movimientos disponibles verde: (",nodo.estado,") ", verde_movimientos, "Movimientos disponibles rojo:  (",nodo.estadoContrincante,") ", rojo_movimientos, "Resultado: ", (verde_movimientos-rojo_movimientos))
+        # print("Casillas centrales verde: ", verde_centrales, "Casillas centrales rojo: ", rojo_centrales, "Resultado: ", (verde_centrales-rojo_centrales))
         # Heurística combinada
         nodo.utilidad = (
-                        (rojo_movimientos -verde_movimientos ) + 
+                        (rojo_movimientos - verde_movimientos ) + 
                         (rojo_centrales - verde_centrales ))
-        print("RESULTADO DE LA UTILIDAD: ", (verde_movimientos - rojo_movimientos) + 
-                        (verde_centrales - rojo_centrales))
+        
+        # print("RESULTADO DE LA UTILIDAD: ", (verde_movimientos - rojo_movimientos) + 
+                        # (verde_centrales - rojo_centrales))
         
         return nodo.utilidad
 
@@ -172,8 +166,6 @@ def calcular_utilidad(nodo):
     else:
         nodo.utilidad = min(utilidades_hijos)
     return nodo.utilidad
-
-
 
 def get_next_move(nodo_inicial):
     if not nodo_inicial.hijos:
@@ -188,14 +180,6 @@ def get_next_move(nodo_inicial):
             max_node = hijo
     
     return max_utilidad, max_node.estado
-def utilidad(nodo_inicial):
-    for hijo in obtener_nodos_hoja(nodo_inicial):
-        verde = count_valid_moves2(hijo.estado, hijo.tablero) 
-        rojo = count_valid_moves2(hijo.estadoContrincante, hijo.tablero)
-        hijo.utilidad = rojo - verde
-        #print("Padre: ", hijo.nodo_padre.estado, "nodo: ",
-               #hijo.estado,"movimientos validos: ",verde," - ", "contrincante : ", hijo.estadoContrincante, "numeros validos: ",rojo, "Utilidad: ", hijo.utilidad)
-
 
 def expandirArbol(nodoAExpandir, depth=0):
     if depth == 0:
@@ -213,7 +197,6 @@ def expandirArbol(nodoAExpandir, depth=0):
             if nodo.nodo_padre is not None:
                 nodo.profundidad = nodo.nodo_padre.profundidad + 1
             nodo.agregarPosicionTablero()
-            minmaxList2.append(nodo)
             nodoAExpandir.agregar_hijo(nodo)
             #print("POSICION", nodo.nodo_padre.estado, nodo.estado, nodo.minmax) 
             expandirArbol(nodo, depth - 1)
@@ -223,7 +206,6 @@ def expandirArbol(nodoAExpandir, depth=0):
             if nodo.nodo_padre is not None:
                 nodo.profundidad = nodo.nodo_padre.profundidad + 1
             nodo.agregarPosicionTablero()
-            minmaxList2.append(nodo)
             nodoAExpandir.agregar_hijo(nodo)
             #print("POSICION", nodo.nodo_padre.estado, nodo.estado, nodo.minmax)
             expandirArbol(nodo, depth - 1) 
@@ -235,24 +217,6 @@ def obtener_nodos_hoja(nodo):
     for hijo in nodo.hijos:
         nodos_hoja.extend(obtener_nodos_hoja(hijo))
     return nodos_hoja
-
-def clear_board():
-    global board
-    # Reset the board
-    for row in range(board_size):
-        for col in range(board_size):
-            board[row][col] = 0
-
-def main():
-    global sound_on
-    level, difficulty = select_level()
-    yoshi_red = (random.randint(0, 7), random.randint(0, 7))
-    yoshi_green = (random.randint(0, 7), random.randint(0, 7))
-    while yoshi_red == yoshi_green:
-        yoshi_red = (random.randint(0, 7), random.randint(0, 7))
-    board[yoshi_green[0]][yoshi_green[1]] = 1
-    board[yoshi_red[0]][yoshi_red[1]] = 2
-    return yoshi_green, yoshi_red
 
 def clear_board():
     global board
